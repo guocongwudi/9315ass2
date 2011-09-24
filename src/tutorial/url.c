@@ -15,62 +15,63 @@
 
 PG_MODULE_MAGIC;
 
-typedef struct Complex
+typedef struct Url
 {
+	char * url;
 	double		x;
 	double		y;
-}	Complex;
+}	Url;
 
 /*
  * Since we use V1 function calling convention, all these functions have
  * the same signature as far as C is concerned.  We provide these prototypes
  * just to forestall warnings when compiled with gcc -Wmissing-prototypes.
  */
-Datum		complex_in(PG_FUNCTION_ARGS);
-Datum		complex_out(PG_FUNCTION_ARGS);
-Datum		complex_recv(PG_FUNCTION_ARGS);
-Datum		complex_send(PG_FUNCTION_ARGS);
-Datum		complex_add(PG_FUNCTION_ARGS);
-Datum		complex_abs_lt(PG_FUNCTION_ARGS);
-Datum		complex_abs_le(PG_FUNCTION_ARGS);
-Datum		complex_abs_eq(PG_FUNCTION_ARGS);
-Datum		complex_abs_ge(PG_FUNCTION_ARGS);
-Datum		complex_abs_gt(PG_FUNCTION_ARGS);
-Datum		complex_abs_cmp(PG_FUNCTION_ARGS);
+Datum		url_in(PG_FUNCTION_ARGS);
+Datum		url_out(PG_FUNCTION_ARGS);
+Datum		url_recv(PG_FUNCTION_ARGS);
+Datum		url_send(PG_FUNCTION_ARGS);
+Datum		url_add(PG_FUNCTION_ARGS);
+Datum		url_abs_lt(PG_FUNCTION_ARGS);
+Datum		url_abs_le(PG_FUNCTION_ARGS);
+Datum		url_abs_eq(PG_FUNCTION_ARGS);
+Datum		url_abs_ge(PG_FUNCTION_ARGS);
+Datum		url_abs_gt(PG_FUNCTION_ARGS);
+Datum		url_abs_cmp(PG_FUNCTION_ARGS);
 
 
 /*****************************************************************************
  * Input/Output functions
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(complex_in);
+PG_FUNCTION_INFO_V1(url_in);
 
 Datum
-complex_in(PG_FUNCTION_ARGS)
+url_in(PG_FUNCTION_ARGS)
 {
 	char	   *str = PG_GETARG_CSTRING(0);
 	double		x,
 				y;
-	Complex    *result;
+	Url    *result;
 
 	if (sscanf(str, " ( %lf , %lf )", &x, &y) != 2)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-				 errmsg("invalid input syntax for complex: \"%s\"",
+				 errmsg("invalid input syntax for Url: \"%s\"",
 						str)));
 
-	result = (Complex *) palloc(sizeof(Complex));
+	result = (Url *) palloc(sizeof(Url));
 	result->x = x;
 	result->y = y;
 	PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_out);
+PG_FUNCTION_INFO_V1(url_out);
 
 Datum
-complex_out(PG_FUNCTION_ARGS)
+url_out(PG_FUNCTION_ARGS)
 {
-	Complex    *complex = (Complex *) PG_GETARG_POINTER(0);
+	Url    *complex = (Url *) PG_GETARG_POINTER(0);
 	char	   *result;
 
 	result = (char *) palloc(100);
@@ -84,26 +85,26 @@ complex_out(PG_FUNCTION_ARGS)
  * These are optional.
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(complex_recv);
+PG_FUNCTION_INFO_V1(url_recv);
 
 Datum
-complex_recv(PG_FUNCTION_ARGS)
+url_recv(PG_FUNCTION_ARGS)
 {
 	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
-	Complex    *result;
+	Url    *result;
 
-	result = (Complex *) palloc(sizeof(Complex));
+	result = (Url *) palloc(sizeof(Url));
 	result->x = pq_getmsgfloat8(buf);
 	result->y = pq_getmsgfloat8(buf);
 	PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_send);
+PG_FUNCTION_INFO_V1(url_send);
 
 Datum
-complex_send(PG_FUNCTION_ARGS)
+url_send(PG_FUNCTION_ARGS)
 {
-	Complex    *complex = (Complex *) PG_GETARG_POINTER(0);
+	Url    *complex = (Url *) PG_GETARG_POINTER(0);
 	StringInfoData buf;
 
 	pq_begintypsend(&buf);
@@ -115,19 +116,19 @@ complex_send(PG_FUNCTION_ARGS)
 /*****************************************************************************
  * New Operators
  *
- * A practical Complex datatype would provide much more than this, of course.
+ * A practical Url datatype would provide much more than this, of course.
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(complex_add);
+PG_FUNCTION_INFO_V1(url_add);
 
 Datum
-complex_add(PG_FUNCTION_ARGS)
+url_add(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
-	Complex    *result;
+	Url    *a = (Url *) PG_GETARG_POINTER(0);
+	Url    *b = (Url *) PG_GETARG_POINTER(1);
+	Url    *result;
 
-	result = (Complex *) palloc(sizeof(Complex));
+	result = (Url *) palloc(sizeof(Url));
 	result->x = a->x + b->x;
 	result->y = a->y + b->y;
 	PG_RETURN_POINTER(result);
@@ -148,7 +149,7 @@ complex_add(PG_FUNCTION_ARGS)
 #define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
 
 static int
-complex_abs_cmp_internal(Complex * a, Complex * b)
+url_abs_cmp_internal(Url * a, Url * b)
 {
 	double		amag = Mag(a),
 				bmag = Mag(b);
@@ -161,68 +162,68 @@ complex_abs_cmp_internal(Complex * a, Complex * b)
 }
 
 
-PG_FUNCTION_INFO_V1(complex_abs_lt);
+PG_FUNCTION_INFO_V1(url_abs_lt);
 
 Datum
-complex_abs_lt(PG_FUNCTION_ARGS)
+url_abs_lt(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+	Url    *a = (Url *) PG_GETARG_POINTER(0);
+	Url    *b = (Url *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) < 0);
+	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) < 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_le);
+PG_FUNCTION_INFO_V1(url_abs_le);
 
 Datum
-complex_abs_le(PG_FUNCTION_ARGS)
+url_abs_le(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+	Url    *a = (Url *) PG_GETARG_POINTER(0);
+	Url    *b = (Url *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) <= 0);
+	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) <= 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_eq);
+PG_FUNCTION_INFO_V1(url_abs_eq);
 
 Datum
-complex_abs_eq(PG_FUNCTION_ARGS)
+url_abs_eq(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+	Url    *a = (Url *) PG_GETARG_POINTER(0);
+	Url    *b = (Url *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) == 0);
+	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) == 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_ge);
+PG_FUNCTION_INFO_V1(url_abs_ge);
 
 Datum
-complex_abs_ge(PG_FUNCTION_ARGS)
+url_abs_ge(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+	Url    *a = (Url *) PG_GETARG_POINTER(0);
+	Url    *b = (Url *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) >= 0);
+	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) >= 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_gt);
+PG_FUNCTION_INFO_V1(url_abs_gt);
 
 Datum
-complex_abs_gt(PG_FUNCTION_ARGS)
+url_abs_gt(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+	Url    *a = (Url *) PG_GETARG_POINTER(0);
+	Url    *b = (Url *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) > 0);
+	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) > 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_cmp);
+PG_FUNCTION_INFO_V1(url_abs_cmp);
 
 Datum
-complex_abs_cmp(PG_FUNCTION_ARGS)
+url_abs_cmp(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+	Url    *a = (Url *) PG_GETARG_POINTER(0);
+	Url    *b = (Url *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_INT32(complex_abs_cmp_internal(a, b));
+	PG_RETURN_INT32(url_abs_cmp_internal(a, b));
 }

@@ -10,6 +10,7 @@
 *.dll
 *.a
 *.mo
+*.sql
 objfiles.txt
 .deps/
 .project
