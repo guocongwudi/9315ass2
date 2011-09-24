@@ -12,6 +12,8 @@
 *.mo
 objfiles.txt
 .deps/
+.project
+.cproject
 
 # Local excludes in root directory
 /GNUmakefile
