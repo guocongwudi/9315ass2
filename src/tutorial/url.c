@@ -8,9 +8,11 @@
 ******************************************************************************/
 
 #include "postgres.h"
-
 #include "fmgr.h"
 #include "libpq/pqformat.h"		/* needed for send/recv functions */
+
+
+
 
 
 PG_MODULE_MAGIC;
@@ -18,8 +20,11 @@ PG_MODULE_MAGIC;
 typedef struct Url
 {
 	char * url;
-	double		x;
-	double		y;
+	char * scheme;
+	char * host;
+	char * port;
+	char * path;
+	char * cgiparams;
 }	Url;
 
 /*
@@ -38,7 +43,11 @@ Datum		url_abs_eq(PG_FUNCTION_ARGS);
 Datum		url_abs_ge(PG_FUNCTION_ARGS);
 Datum		url_abs_gt(PG_FUNCTION_ARGS);
 Datum		url_abs_cmp(PG_FUNCTION_ARGS);
-
+char *str_n_dup(char *, int);
+Url *parseURL(char *);
+void       printParsedURL(Url *);
+Url *makeParsedURL();
+Url *freeParsedURL(Url *);
 
 /*****************************************************************************
  * Input/Output functions
@@ -50,6 +59,7 @@ Datum
 url_in(PG_FUNCTION_ARGS)
 {
 	char	   *str = PG_GETARG_CSTRING(0);
+	char	   *pch;
 	double		x,
 				y;
 	Url    *result;
@@ -61,10 +71,149 @@ url_in(PG_FUNCTION_ARGS)
 						str)));
 
 	result = (Url *) palloc(sizeof(Url));
-	result->x = x;
-	result->y = y;
+//	result->x = x;
+//	result->y = y;
 	PG_RETURN_POINTER(result);
 }
+
+Url *parseURL(char *url)
+{
+	char *c, *d;
+	for(int i = 0; i < strlen(url); i++){
+		url[i] = tolower(url[i]);
+	}
+	Url *purl = NULL;
+
+	// trim trailing newline
+	c = url;
+	while (*c != '\0' && *c != '\n') c++;
+	if (*c == '\n') *c = '\0';
+
+
+	// create ParsedURL object
+	if ((purl = makeParsedURL()) == NULL)
+		return NULL;
+
+	// start parse
+	c = d = url;
+
+	// find scheme component
+	while (*d != '\0' && *d != ':') d++;
+	// didn't find scheme
+	if (*d == '\0') return freeParsedURL(purl);
+
+	// copy scheme
+	purl->scheme = str_n_dup(c, d-c);
+	// must be "http" or "https"
+	if (strcmp(purl->scheme,"http") != 0
+		&& strcmp(purl->scheme,"https") != 0) return freeParsedURL(purl);
+
+	// copy host
+	if (*(d+1) != '/' && *(d+2) != '/') return freeParsedURL(purl);
+	c = d = d+3; // skip over '//'
+	while (*d != '\0' && *d != ':' && *d != '/') d++;
+	if (*d == '\0') return freeParsedURL(purl);
+	purl->host = str_n_dup(c, d-c);
+	// must contain at least one dot
+	if (strchr(purl->host,'.') == NULL) return freeParsedURL(purl);
+
+	// copy port, if any
+	if (*d == ':') {
+		c = d = d+1; // skip over ':'
+		while (*d != '\0' && *d != '/') d++;
+		purl->port = str_n_dup(c, d-c);
+	}
+
+//	default port
+	if(purl->port == NULL){
+		if(strcmp(purl->scheme,"http") == 0){
+			purl->port = malloc(3);
+			strcpy(purl->port, "80");
+			purl->port[2] = '\0';
+		}
+		else{
+			purl->port = malloc(4);
+			strcpy(purl->port, "443");
+			purl->port[3] = '\0';
+		}
+	}
+
+//	if url end with / and final component is not path, treat it as invalid
+	if(*d == '/' && *d+1 == '\0') return freeParsedURL(purl);
+
+	// copy path, if any
+	if (*d != '\0') {
+		while (*d == '/') c = d = d+1; // skip over '/*'
+		if (*d != '\0') {
+			while (*d != '\0' && *d != '?') d++;
+			purl->path = str_n_dup(c, d-c);
+		}
+	}
+
+//	default path
+	if(purl->path == NULL) {
+		purl->path = malloc(11);
+		strcpy(purl->path, "index.html");
+		purl->path[10] = '\0';
+	}
+
+	// copy params, if any
+	if (*d != '\0') {
+		c = d = d+1; // skip over '?'
+		if (*d != '\0') {
+			purl->cgiparams = strdup(c);
+		}
+	}
+
+	return purl;
+}
+
+//initialise
+Url *makeParsedURL()
+{
+	Url *purl;
+	if ((purl = malloc(sizeof(Url))) == NULL)
+		return NULL;
+	purl->scheme = NULL;
+	purl->host = NULL;
+	purl->port = NULL;
+	purl->path = NULL;
+	purl->cgiparams = NULL;
+	return purl;
+}
+
+Url *freeParsedURL(Url *purl)
+{
+	if (purl == NULL) return NULL;
+	if (purl->scheme != NULL) free(purl->scheme);
+	if (purl->host != NULL) free(purl->host);
+	if (purl->port != NULL) free(purl->port);
+	if (purl->path != NULL) free(purl->path);
+	if (purl->cgiparams != NULL) free(purl->cgiparams);
+	free(purl);
+	return NULL;
+}
+
+// for debug
+void printParsedURL(Url *purl)
+{
+	if (purl->scheme != NULL) printf("Scheme:  %s\n",purl->scheme);
+	if (purl->host != NULL)   printf("Host:    %s\n",purl->host);
+	if (purl->port != NULL)   printf("Port:    %s\n",purl->port);
+	if (purl->path != NULL)   printf("Path:    %s\n",purl->path);
+	if (purl->cgiparams != NULL) printf("Params:  %s\n",purl->cgiparams);
+}
+
+// copy substring
+char *str_n_dup(char *str, int n)
+{
+	char *new = malloc(n+1);
+	if (new == NULL) return NULL;
+	strncpy(new,str,n);
+	new[n] = '\0';
+	return new;
+}
+
 
 PG_FUNCTION_INFO_V1(url_out);
 
@@ -75,7 +224,7 @@ url_out(PG_FUNCTION_ARGS)
 	char	   *result;
 
 	result = (char *) palloc(100);
-	snprintf(result, 100, "(%g,%g)", complex->x, complex->y);
+//	snprintf(result, 100, "(%g,%g)", complex->x, complex->y);
 	PG_RETURN_CSTRING(result);
 }
 
@@ -94,8 +243,8 @@ url_recv(PG_FUNCTION_ARGS)
 	Url    *result;
 
 	result = (Url *) palloc(sizeof(Url));
-	result->x = pq_getmsgfloat8(buf);
-	result->y = pq_getmsgfloat8(buf);
+//	result->x = pq_getmsgfloat8(buf);
+//	result->y = pq_getmsgfloat8(buf);
 	PG_RETURN_POINTER(result);
 }
 
@@ -108,8 +257,8 @@ url_send(PG_FUNCTION_ARGS)
 	StringInfoData buf;
 
 	pq_begintypsend(&buf);
-	pq_sendfloat8(&buf, complex->x);
-	pq_sendfloat8(&buf, complex->y);
+//	pq_sendfloat8(&buf, complex->x);
+//	pq_sendfloat8(&buf, complex->y);
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
@@ -129,8 +278,8 @@ url_add(PG_FUNCTION_ARGS)
 	Url    *result;
 
 	result = (Url *) palloc(sizeof(Url));
-	result->x = a->x + b->x;
-	result->y = a->y + b->y;
+//	result->x = a->x + b->x;
+//	result->y = a->y + b->y;
 	PG_RETURN_POINTER(result);
 }
 
@@ -146,7 +295,7 @@ url_add(PG_FUNCTION_ARGS)
  * an internal three-way-comparison function, as we do here.
  *****************************************************************************/
 
-#define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
+//#define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
 
 static int
 url_abs_cmp_internal(Url * a, Url * b)
