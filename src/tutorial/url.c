@@ -139,10 +139,31 @@ Url *parseURL(char *url) {
 		while (*d == '/')
 			d++;
 		c = d;
+
 		if (*d != '\0') {
-			while (*d != '\0' && *d != '?')
+
+			while (*d != '\0' && *d != '?'){
 				d++;
+			}
 			purl->path = str_n_dup(c, d - c);
+			char *tmp;
+			int douslash = 0;
+			int index = 0;
+			for(int i = 0; i < strlen(purl->path); i++){
+				if (purl->path[i] == '/') {
+					if (douslash != 1) {
+						*tmp[index++] = purl->path[i];
+					}
+					douslash = 1;
+				}
+
+				else {
+					douslash = 0;
+					*tmp[index++] = purl->path[i];
+				}
+
+			}
+			purl->path = str_n_dup(tmp, index);
 		}
 	}
 //	********************merge**********************//
@@ -163,25 +184,26 @@ Url *parseURL(char *url) {
 	}
 	int i;
 
-	for(i = 0; i < strlen(purl->params); i++) {
-		(purl->params)[i] = tolower((purl->params)[i]);
+	for(i = 0; purl->params != NULL && i < strlen(purl->params); i++) {
+//		printf("%s \n", purl->params[i]);
+		purl->params[i] = tolower(purl->params[i]);
 	}
 
 	for(i = 0; i < strlen(purl->host); i++) {
-		(purl->host)[i] = tolower((purl->host)[i]);
+		purl->host[i] = tolower(purl->host[i]);
 	}
 
 
 	for(i = 0; i < strlen(purl->path); i++) {
-		(purl->path)[i] = tolower((purl->path)[i]);
+		purl->path[i] = tolower(purl->path[i]);
 	}
 
 	for(i = 0; i < strlen(purl->port); i++) {
-		(purl->port)[i] = tolower((purl->port)[i]);
+		purl->port[i] = tolower(purl->port[i]);
 	}
 
 	for (i = 0; i < strlen(purl->scheme); i++) {
-		(purl->scheme)[i] = tolower((purl->scheme)[i]);
+		purl->scheme[i] = tolower(purl->scheme[i]);
 	}
 
 
