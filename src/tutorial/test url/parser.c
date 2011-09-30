@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-
 typedef struct parsed_url {
 	char *scheme;
 	char *host;
@@ -10,8 +9,6 @@ typedef struct parsed_url {
 	char *path;
 	char *params;
 } Url;
-
-
 
 char *str_n_dup(char *, int);
 Url *parseURL(char *);
@@ -114,9 +111,7 @@ Url *parseURL(char *url) {
 	if (*d == '/' && *d + 1 == '\0')
 		return freeParsedURL(purl);
 
-
 // ****************merge************//
-
 
 	// copy path, if any
 
@@ -134,11 +129,11 @@ Url *parseURL(char *url) {
 	}
 //	********************merge**********************//
 	//	default path
-		if(purl->path == NULL) {
-			purl->path = malloc(11);
-			strcpy(purl->path, "index.html");
-			purl->path[10] = '\0';
-		}
+	if (purl->path == NULL) {
+		purl->path = malloc(11);
+		strcpy(purl->path, "index.html");
+		purl->path[10] = '\0';
+	}
 //		****************merge**********************//
 
 	// copy params, if any
@@ -150,27 +145,25 @@ Url *parseURL(char *url) {
 	}
 	int i;
 
-	for(i = 0; i < strlen(purl->params); i++) {
+	for (i = 0; i < strlen(purl->params); i++) {
 		(purl->params)[i] = tolower((purl->params)[i]);
 	}
 
-	for(i = 0; i < strlen(purl->host); i++) {
+	for (i = 0; i < strlen(purl->host); i++) {
 		(purl->host)[i] = tolower((purl->host)[i]);
 	}
 
-
-	for(i = 0; i < strlen(purl->path); i++) {
+	for (i = 0; i < strlen(purl->path); i++) {
 		(purl->path)[i] = tolower((purl->path)[i]);
 	}
 
-	for(i = 0; i < strlen(purl->port); i++) {
+	for (i = 0; i < strlen(purl->port); i++) {
 		(purl->port)[i] = tolower((purl->port)[i]);
 	}
 
 	for (i = 0; i < strlen(purl->scheme); i++) {
 		(purl->scheme)[i] = tolower((purl->scheme)[i]);
 	}
-
 
 	return purl;
 }
@@ -211,22 +204,7 @@ Url *freeParsedURL(Url *purl) {
 	return NULL;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void  main(void) {
+void main(void) {
 
 	Url *url;
 	Url *a;
@@ -236,73 +214,93 @@ void  main(void) {
 	char* line2;
 
 	line = "http://www.AAAA.com/song/play?ids=/song/playlist/id/7335983/type/3";
-	line1 = "https://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/3";
-	line2 = "http://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/4";
+	line1 =
+			"https://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/3";
+	line2 =
+			"http://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/4";
 	url = parseURL(line);
 	a = parseURL(line1);
 	b = parseURL(line2);
 	if (url == NULL
 	)
 		printf("this url is invalid");
-	char	   *result="";
+	char *result = "";
 
+	int url_len = 0;
+	url_len = strlen(url->host) + strlen(url->params) + strlen(url->path)
+			+ strlen(url->port) + strlen(url->scheme);
 
-		int url_len=0;
-		url_len = strlen(url->host) +strlen(url->params) +strlen(url->path)+strlen(url->port)+strlen(url->scheme);
+	result = (char *) malloc(url_len + 5);
+	result = strcat(result, url->scheme);
+	result = strcat(result, "://");
 
+	result = strcat(result, url->host);
+	result = strcat(result, ":");
+	result = strcat(result, url->port);
+	result = strcat(result, "/");
 
-		result = (char *) malloc(url_len+5);
-		result = strcat( result, url->scheme);
-		result = strcat( result, "://");
+	if (url->path != NULL)
+	{
+		result = strcat(result, url->path);
+	}
+	if (url->params != NULL)
+	{
 
-		result = strcat( result, url->host);
-		result = strcat( result,    ":");
-		result = strcat( result,  url->port  );
-		result = strcat( result,  "/"  );
+		result = strcat(result, url->params);
+	}
 
-		if(url->path!=NULL)
-		{
-			result = strcat( result, url->path  );
-		}
-		if(url->params!=NULL)
-		{
-
-			result = strcat( result, url->params  );
-		}
-
-
-	printf("len = %d  ,%s",url_len,result);
+	printf("len = %d  ,%s", url_len, result);
 
 //test the equal
 	int isEqual = 1; // 1 means equal
-	if (
-			strcmp(a->host,b->host) == 0 &&
-			strcmp(a->path,b->path) == 0 &&
+	if (strcmp(a->host, b->host) == 0 && strcmp(a->path, b->path) == 0 &&
 
-			strcmp(a->params,b->params) == 0 &&
-			isEqual)
+	strcmp(a->params, b->params) == 0 && isEqual)
 		isEqual = 1;
 	else
 		isEqual = 0;
 
-	if (isEqual)
-	{
-	if (
-				(strcmp(a->scheme,b->scheme) == 0 && strcmp(a->port,b->port) == 0)
-				||
-				(
-				(strcmp(a->scheme,"http") == 0 || strcmp(b->scheme,"https") == 0) &&
-				(strcmp(b->scheme,"http") == 0 || strcmp(a->scheme,"https") == 0) &&
-				strcmp(a->port,b->port) == 0
-				)
-		)
-		isEqual = 1;
-	}
-	else
+	if (isEqual) {
+		if ((strcmp(a->scheme, b->scheme) == 0 && strcmp(a->port, b->port) == 0)
+				|| ((strcmp(a->scheme, "http") == 0
+						|| strcmp(b->scheme, "https") == 0)
+						&& (strcmp(b->scheme, "http") == 0
+								|| strcmp(a->scheme, "https") == 0)
+						&& strcmp(a->port, b->port) == 0))
+			isEqual = 1;
+	} else
 		isEqual = 0;
 
-	printf("\n%d\n",isEqual);
+	printf("\n%d\n", isEqual);
+	printf("\n================\n");
+
+	char *str1 = "Hello Big Boy";
+	char *t1;
 
 
+	for ( t1 = strtok(str1," ");
+	      t1 != NULL;
+	      t1 = strtok(NULL, " ") )
+
+	printf("%s\n",t1);
+
+
+//	char *str1 = "Hello Big Boy";
+//	char *t1;
+//	printf("%s\n", str1);
+//
+//	for (t1 = strtok(str1, " "); t1 != NULL; t1 = strtok(NULL, " "))
+//	{
+//		printf("%s\n", t1);
+//		int i;
+//
+//		for (i = 0; i < strlen(t1); i++) {
+//			t1[i] = tolower(t1[i]);
+//		}
+//		printf("%s\n", t1);
+//		printf("==\n");
+//	}
+//
+//	printf("%s\n", str1);
 
 }

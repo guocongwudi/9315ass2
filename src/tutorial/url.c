@@ -386,6 +386,13 @@ url_abs_lt(PG_FUNCTION_ARGS)
 	Url    *a = (Url *) PG_GETARG_POINTER(0);
 	Url    *b = (Url *) PG_GETARG_POINTER(1);
 
+	int isEqual = isUrlEqual(a, b);
+
+	if (!isEqual)
+	{
+
+	}
+
 	PG_RETURN_BOOL(strcmp(a, b) != 0);
 }
 
@@ -400,6 +407,28 @@ url_abs_le(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) <= 0);
 }
 
+int isUrlEqual(Url* a, Url* b) {
+	int isEqual = 1; // 1 means equal
+	if (strcmp(a->host, b->host) == 0 && strcmp(a->path, b->path) == 0 &&
+
+	strcmp(a->params, b->params) == 0 && isEqual)
+		isEqual = 1;
+	else
+		isEqual = 0;
+
+	if (isEqual) {
+		if ((strcmp(a->scheme, b->scheme) == 0 && strcmp(a->port, b->port) == 0)
+				|| ((strcmp(a->scheme, "http") == 0
+						|| strcmp(b->scheme, "https") == 0)
+						&& (strcmp(b->scheme, "http") == 0
+								|| strcmp(a->scheme, "https") == 0)
+						&& strcmp(a->port, b->port) == 0))
+			isEqual = 1;
+	} else
+		isEqual = 0;
+	return isEqual;
+}
+
 PG_FUNCTION_INFO_V1(url_abs_eq);
 
 Datum
@@ -408,33 +437,8 @@ url_abs_eq(PG_FUNCTION_ARGS)
 
 	Url    *a = (Url *) PG_GETARG_POINTER(0);
 	Url    *b = (Url *) PG_GETARG_POINTER(1);
-	int isEqual = 1; // 1 means equal
-	if (
-			strcmp(a->host,b->host) == 0 &&
-			strcmp(a->path,b->path) == 0 &&
 
-			strcmp(a->params,b->params) == 0 &&
-			isEqual)
-		isEqual = 1;
-	else
-		isEqual = 0;
-
-	if (isEqual)
-	{
-	if (
-				(strcmp(a->scheme,b->scheme) == 0 && strcmp(a->port,b->port) == 0)
-				||
-				(
-				(strcmp(a->scheme,"http") == 0 || strcmp(b->scheme,"https") == 0) &&
-				(strcmp(b->scheme,"http") == 0 || strcmp(a->scheme,"https") == 0) &&
-				strcmp(a->port,b->port) == 0
-				)
-		)
-		isEqual = 1;
-	}
-	else
-		isEqual = 0;
-
+	int isEqual = isUrlEqual(a, b);
 
 	PG_RETURN_BOOL( isEqual );
 }
