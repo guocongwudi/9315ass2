@@ -246,7 +246,7 @@ void main(void) {
 	)
 		printf("this url is invalid");
 	else
-		printParsedURL(url);
+		;
 	char	   *result="";
 
 
