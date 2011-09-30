@@ -7,7 +7,7 @@
   format for these routines is dictated by Postgres architecture.
 ******************************************************************************/
 
-#include  "postgres.h"
+#include "postgres.h"
 
 #include  "fmgr.h"
 #include  "libpq/pqformat.h"		/* needed for send/recv functions */
