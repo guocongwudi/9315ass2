@@ -100,14 +100,36 @@ Url *parseURL(char *url) {
 			d++;
 
 		purl->port = str_n_dup(c, d - c);
-	} else {
-		if (strcmp(purl->scheme, "http") == 0)
-			purl->port = "80";
-
-		else
-			purl->port = "403";
-
 	}
+//	  else {
+//		if (strcmp(purl->scheme, "http") == 0)
+//			purl->port = "80";
+//
+//		else
+//			purl->port = "403";
+//
+//	}
+//	**************merge*****************//
+	//	default port
+	if (purl->port == NULL) {
+		if (strcmp(purl->scheme, "http") == 0) {
+			purl->port = malloc(3);
+			strcpy(purl->port, "80");
+			purl->port[2] = '\0';
+		} else {
+			purl->port = malloc(4);
+			strcpy(purl->port, "443");
+			purl->port[3] = '\0';
+		}
+	}
+
+	//	if url end with / and final component is not path, treat it as invalid
+	if (*d == '/' && *d + 1 == '\0')
+		return freeParsedURL(purl);
+
+
+// ****************merge************//
+
 
 	// copy path, if any
 
@@ -123,6 +145,14 @@ Url *parseURL(char *url) {
 			purl->path = str_n_dup(c, d - c);
 		}
 	}
+//	********************merge**********************//
+	//	default path
+		if(purl->path == NULL) {
+			purl->path = malloc(11);
+			strcpy(purl->path, "index.html");
+			purl->path[10] = '\0';
+		}
+//		****************merge**********************//
 
 	// copy params, if any
 	if (*d != '\0') {
