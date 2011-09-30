@@ -15,7 +15,6 @@ typedef struct parsed_url {
 
 char *str_n_dup(char *, int);
 Url *parseURL(char *);
-void printParsedURL(Url *);
 Url *makeParsedURL();
 Url *freeParsedURL(Url *);
 
@@ -227,7 +226,7 @@ Url *freeParsedURL(Url *purl) {
 
 
 
-void main(void) {
+void  main(void) {
 
 	Url *url;
 	Url *a;
@@ -238,15 +237,13 @@ void main(void) {
 
 	line = "http://www.AAAA.com/song/play?ids=/song/playlist/id/7335983/type/3";
 	line1 = "https://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/3";
-	line2 = "http://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/3";
+	line2 = "http://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/4";
 	url = parseURL(line);
 	a = parseURL(line1);
 	b = parseURL(line2);
 	if (url == NULL
 	)
 		printf("this url is invalid");
-	else
-		printParsedURL(url);
 	char	   *result="";
 
 
@@ -303,6 +300,8 @@ void main(void) {
 	}
 	else
 		isEqual = 0;
+
+	printf("\n%d\n",isEqual);
 
 
 
