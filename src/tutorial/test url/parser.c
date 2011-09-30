@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+
+
 typedef struct parsed_url {
 	char *scheme;
 	char *host;
@@ -8,6 +10,9 @@ typedef struct parsed_url {
 	char *path;
 	char *params;
 } Url;
+
+
+
 char *str_n_dup(char *, int);
 Url *parseURL(char *);
 void printParsedURL(Url *);
@@ -26,8 +31,6 @@ char *str_n_dup(char *str, int n) {
 
 Url *parseURL(char *url) {
 	char *c, *d;
-	int i=0;
-
 	Url *purl = NULL;
 
 	// trim trailing newline
@@ -85,14 +88,36 @@ Url *parseURL(char *url) {
 			d++;
 
 		purl->port = str_n_dup(c, d - c);
-	} else {
-		if (strcmp(purl->scheme, "http") == 0)
-			purl->port = "80";
-
-		else
-			purl->port = "403";
-
 	}
+//	  else {
+//		if (strcmp(purl->scheme, "http") == 0)
+//			purl->port = "80";
+//
+//		else
+//			purl->port = "403";
+//
+//	}
+//	**************merge*****************//
+	//	default port
+	if (purl->port == NULL) {
+		if (strcmp(purl->scheme, "http") == 0) {
+			purl->port = malloc(3);
+			strcpy(purl->port, "80");
+			purl->port[2] = '\0';
+		} else {
+			purl->port = malloc(4);
+			strcpy(purl->port, "443");
+			purl->port[3] = '\0';
+		}
+	}
+
+	//	if url end with / and final component is not path, treat it as invalid
+	if (*d == '/' && *d + 1 == '\0')
+		return freeParsedURL(purl);
+
+
+// ****************merge************//
+
 
 	// copy path, if any
 
@@ -108,6 +133,14 @@ Url *parseURL(char *url) {
 			purl->path = str_n_dup(c, d - c);
 		}
 	}
+//	********************merge**********************//
+	//	default path
+		if(purl->path == NULL) {
+			purl->path = malloc(11);
+			strcpy(purl->path, "index.html");
+			purl->path[10] = '\0';
+		}
+//		****************merge**********************//
 
 	// copy params, if any
 	if (*d != '\0') {
@@ -116,6 +149,29 @@ Url *parseURL(char *url) {
 			purl->params = strdup(c);
 		}
 	}
+	int i;
+
+	for(i = 0; i < strlen(purl->params); i++) {
+		(purl->params)[i] = tolower((purl->params)[i]);
+	}
+
+	for(i = 0; i < strlen(purl->host); i++) {
+		(purl->host)[i] = tolower((purl->host)[i]);
+	}
+
+
+	for(i = 0; i < strlen(purl->path); i++) {
+		(purl->path)[i] = tolower((purl->path)[i]);
+	}
+
+	for(i = 0; i < strlen(purl->port); i++) {
+		(purl->port)[i] = tolower((purl->port)[i]);
+	}
+
+	for (i = 0; i < strlen(purl->scheme); i++) {
+		(purl->scheme)[i] = tolower((purl->scheme)[i]);
+	}
+
 
 	return purl;
 }
@@ -155,36 +211,37 @@ Url *freeParsedURL(Url *purl) {
 	free(purl);
 	return NULL;
 }
-void printParsedURL(Url *purl) {
-	if (purl->scheme != NULL
-	)
-		printf("Scheme:  %s\n", purl->scheme);
-	if (purl->host != NULL
-	)
-		printf("Host:    %s\n", purl->host);
-	if (purl->port != NULL
-	)
-		printf("Port:    %s\n", purl->port);
-	if (purl->path != NULL
-	)
-		printf("Path:    %s\n", purl->path);
-	if (purl->params != NULL
-	)
-		printf("Params:  %s\n", purl->params);
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void main(void) {
 
 	Url *url;
+	Url *a;
+	Url *b;
 	char* line;
-
-
-
-
-
+	char* line1;
+	char* line2;
 
 	line = "http://www.AAAA.com/song/play?ids=/song/playlist/id/7335983/type/3";
+	line1 = "https://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/3";
+	line2 = "http://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/3";
 	url = parseURL(line);
+	a = parseURL(line1);
+	b = parseURL(line2);
 	if (url == NULL
 	)
 		printf("this url is invalid");
@@ -218,5 +275,35 @@ void main(void) {
 
 
 	printf("len = %d  ,%s",url_len,result);
+
+//test the equal
+	int isEqual = 1; // 1 means equal
+	if (
+			strcmp(a->host,b->host) == 0 &&
+			strcmp(a->path,b->path) == 0 &&
+
+			strcmp(a->params,b->params) == 0 &&
+			isEqual)
+		isEqual = 1;
+	else
+		isEqual = 0;
+
+	if (isEqual)
+	{
+	if (
+				(strcmp(a->scheme,b->scheme) == 0 && strcmp(a->port,b->port) == 0)
+				||
+				(
+				(strcmp(a->scheme,"http") == 0 || strcmp(b->scheme,"https") == 0) &&
+				(strcmp(b->scheme,"http") == 0 || strcmp(a->scheme,"https") == 0) &&
+				strcmp(a->port,b->port) == 0
+				)
+		)
+		isEqual = 1;
+	}
+	else
+		isEqual = 0;
+
+
 
 }
