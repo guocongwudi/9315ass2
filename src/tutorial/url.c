@@ -162,6 +162,28 @@ Url *parseURL(char *url) {
 		}
 	}
 
+	for(int i = 0; i < strlen(purl->params); i++) {
+		(purl->params)[i] = tolower((purl->params)[i]);
+	}
+
+	for(int i = 0; i < strlen(purl->host); i++) {
+		(purl->host)[i] = tolower((purl->host)[i]);
+	}
+
+
+	for(int i = 0; i < strlen(purl->path); i++) {
+		(purl->path)[i] = tolower((purl->path)[i]);
+	}
+
+	for(int i = 0; i < strlen(purl->port); i++) {
+		(purl->port)[i] = tolower((purl->port)[i]);
+	}
+
+	for (int i = 0; i < strlen(purl->scheme); i++) {
+		(purl->scheme)[i] = tolower((purl->scheme)[i]);
+	}
+
+
 	return purl;
 }
 
