@@ -418,8 +418,9 @@ url_abs_eq(PG_FUNCTION_ARGS)
 	else
 		isEqual = 0;
 
+	if (isEqual)
+	{
 	if (
-			(
 				(strcmp(a->scheme,b->scheme) == 0 && strcmp(a->port,b->port) == 0)
 				||
 				(
@@ -427,9 +428,9 @@ url_abs_eq(PG_FUNCTION_ARGS)
 				(strcmp(b->scheme,"http") == 0 || strcmp(a->scheme,"https") == 0) &&
 				strcmp(a->port,b->port) == 0
 				)
-			) &&
-			isEqual)
+		)
 		isEqual = 1;
+	}
 	else
 		isEqual = 0;
 
