@@ -2,18 +2,15 @@
  * $PostgreSQL: pgsql/src/tutorial/complex.c,v 1.15 2009/06/11 14:49:15 momjian Exp $
  *
  ******************************************************************************
-  This file contains routines that can be bound to a Postgres backend and
-  called by the backend in the process of processing queries.  The calling
-  format for these routines is dictated by Postgres architecture.
-******************************************************************************/
-
+ This file contains routines that can be bound to a Postgres backend and
+ called by the backend in the process of processing queries.  The calling
+ format for these routines is dictated by Postgres architecture.
+ ******************************************************************************/
 #include "postgres.h"
-
 #include "fmgr.h"
 #include "libpq/pqformat.h"		/* needed for send/recv functions */
-
-
-PG_MODULE_MAGIC;
+PG_MODULE_MAGIC
+;
 
 typedef struct parsed_url {
 	char *scheme;
@@ -22,8 +19,6 @@ typedef struct parsed_url {
 	char *path;
 	char *params;
 } Url;
-
-
 
 char *str_n_dup(char *, int);
 Url *parseURL(char *);
@@ -69,6 +64,7 @@ Url *parseURL(char *url) {
 
 	// copy scheme
 	purl->scheme = str_n_dup(c, d - c);
+	int i;
 	for (i = 0; i < strlen(purl->scheme); i++) {
 		purl->scheme[i] = tolower(purl->scheme[i]);
 	}
@@ -131,9 +127,7 @@ Url *parseURL(char *url) {
 	if (*d == '/' && *d + 1 == '\0')
 		return freeParsedURL(purl);
 
-
 // ****************merge************//
-
 
 	// copy path, if any
 
@@ -146,14 +140,14 @@ Url *parseURL(char *url) {
 
 		if (*d != '\0') {
 
-			while (*d != '\0' && *d != '?'){
+			while (*d != '\0' && *d != '?') {
 				d++;
 			}
 			purl->path = str_n_dup(c, d - c);
 			char *tmp = malloc(strlen(purl->path));
 			int douslash = 0;
 			int index = 0;
-			for (int i = 0; i < strlen(purl->path); i++) {
+			for (i = 0; i < strlen(purl->path); i++) {
 				if (purl->path[i] == '/') {
 					if (douslash != 1) {
 						tmp[index++] = purl->path[i];
@@ -172,11 +166,11 @@ Url *parseURL(char *url) {
 	}
 //	********************merge**********************//
 	//	default path
-		if(purl->path == NULL) {
-			purl->path = malloc(11);
-			strcpy(purl->path, "index.html");
-			purl->path[10] = '\0';
-		}
+	if (purl->path == NULL) {
+		purl->path = malloc(11);
+		strcpy(purl->path, "index.html");
+		purl->path[10] = '\0';
+	}
 //		****************merge**********************//
 
 	// copy params, if any
@@ -186,26 +180,24 @@ Url *parseURL(char *url) {
 			purl->params = strdup(c);
 		}
 	}
-	int i;
 
-	for(i = 0; purl->params != NULL && i < strlen(purl->params); i++) {
+
+	for (i = 0; purl->params != NULL && i < strlen(purl->params); i++) {
 //		printf("%s \n", purl->params[i]);
 		purl->params[i] = tolower(purl->params[i]);
 	}
 
-	for(i = 0; i < strlen(purl->host); i++) {
+	for (i = 0; i < strlen(purl->host); i++) {
 		purl->host[i] = tolower(purl->host[i]);
 	}
 
-
-	for(i = 0; i < strlen(purl->path); i++) {
+	for (i = 0; i < strlen(purl->path); i++) {
 		purl->path[i] = tolower(purl->path[i]);
 	}
 
-	for(i = 0; i < strlen(purl->port); i++) {
+	for (i = 0; i < strlen(purl->port); i++) {
 		purl->port[i] = tolower(purl->port[i]);
 	}
-
 
 
 	return purl;
@@ -247,26 +239,22 @@ Url *freeParsedURL(Url *purl) {
 	return NULL;
 }
 
-
-
-
 /*
  * Since we use V1 function calling convention, all these functions have
  * the same signature as far as C is concerned.  We provide these prototypes
  * just to forestall warnings when compiled with gcc -Wmissing-prototypes.
  */
-Datum		url_in(PG_FUNCTION_ARGS);
-Datum		url_out(PG_FUNCTION_ARGS);
-Datum		url_recv(PG_FUNCTION_ARGS);
-Datum		url_send(PG_FUNCTION_ARGS);
-Datum		url_add(PG_FUNCTION_ARGS);
-Datum		url_abs_lt(PG_FUNCTION_ARGS);
-Datum		url_abs_le(PG_FUNCTION_ARGS);
-Datum		url_abs_eq(PG_FUNCTION_ARGS);
-Datum		url_abs_ge(PG_FUNCTION_ARGS);
-Datum		url_abs_gt(PG_FUNCTION_ARGS);
-Datum		url_abs_cmp(PG_FUNCTION_ARGS);
-
+Datum url_in(PG_FUNCTION_ARGS);
+Datum url_out(PG_FUNCTION_ARGS);
+Datum url_recv(PG_FUNCTION_ARGS);
+Datum url_send(PG_FUNCTION_ARGS);
+Datum url_add(PG_FUNCTION_ARGS);
+Datum url_abs_lt(PG_FUNCTION_ARGS);
+Datum url_abs_le(PG_FUNCTION_ARGS);
+Datum url_abs_eq(PG_FUNCTION_ARGS);
+Datum url_abs_ge(PG_FUNCTION_ARGS);
+Datum url_abs_gt(PG_FUNCTION_ARGS);
+Datum url_abs_cmp(PG_FUNCTION_ARGS);
 
 /*****************************************************************************
  * Input/Output functions
@@ -274,54 +262,48 @@ Datum		url_abs_cmp(PG_FUNCTION_ARGS);
 
 PG_FUNCTION_INFO_V1(url_in);
 
-Datum
-url_in(PG_FUNCTION_ARGS)
-{	char	   *str = PG_GETARG_CSTRING(0);
+Datum url_in(PG_FUNCTION_ARGS) {
+	char *str = PG_GETARG_CSTRING(0);
 
-	Url    *   url;
-	url=parseURL(str);
-	if (  url == NULL)
-		ereport(ERROR,
-				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-				 errmsg("invalid input syntax for Url: \"%s\"",
-						str)));
-
+	Url * url;
+	url = parseURL(str);
+	if (url == NULL
+)
+				ereport(
+				ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for Url: \"%s\"", str)));
 
 	PG_RETURN_POINTER(url);
 }
 
 PG_FUNCTION_INFO_V1(url_out);
 
-Datum
-url_out(PG_FUNCTION_ARGS)
-{
-	Url    *url = (Url *) PG_GETARG_POINTER(0);
-	char	   *result="";
+Datum url_out(PG_FUNCTION_ARGS) {
+	Url *url = (Url *) PG_GETARG_POINTER(0);
+	char *result = "";
 
-
-	int url_len=0;
-	url_len = strlen(url->host) +strlen(url->params) +strlen(url->path)+strlen(url->port)+strlen(url->scheme);
-
+	int url_len = 0;
+	url_len = strlen(url->host) + strlen(url->params) + strlen(url->path)
+			+ strlen(url->port) + strlen(url->scheme);
 
 	result = (char *) palloc(url_len+5);
-	result = strcat( result, url->scheme);
-	result = strcat( result, "://");
+	result = strcat(result, url->scheme);
+	result = strcat(result, "://");
 
-	result = strcat( result, url->host);
-	result = strcat( result,    ":");
-	result = strcat( result,  url->port  );
-	result = strcat( result,  "/"  );
+	result = strcat(result, url->host);
+	result = strcat(result, ":");
+	result = strcat(result, url->port);
+	result = strcat(result, "/");
 
-	if(url->path!=NULL)
+	if (url->path != NULL)
 	{
-		result = strcat( result, url->path  );
+		result = strcat(result, url->path);
 	}
-	if(url->params!=NULL)
+	if (url->params != NULL)
 	{
-		result = strcat( result, "?"  );
-		result = strcat( result, url->params  );
+		result = strcat(result, "?");
+		result = strcat(result, url->params);
 	}
-
 
 	PG_RETURN_CSTRING(result);
 }
@@ -334,11 +316,9 @@ url_out(PG_FUNCTION_ARGS)
 
 PG_FUNCTION_INFO_V1(url_recv);
 
-Datum
-url_recv(PG_FUNCTION_ARGS)
-{
-	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
-	Url    *result;
+Datum url_recv(PG_FUNCTION_ARGS) {
+	StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
+	Url *result;
 
 	result = (Url *) palloc(sizeof(Url));
 	result->host = pq_getstring(buf);
@@ -351,10 +331,8 @@ url_recv(PG_FUNCTION_ARGS)
 
 PG_FUNCTION_INFO_V1(url_send);
 
-Datum
-url_send(PG_FUNCTION_ARGS)
-{
-	Url    *url = (Url *) PG_GETARG_POINTER(0);
+Datum url_send(PG_FUNCTION_ARGS) {
+	Url *url = (Url *) PG_GETARG_POINTER(0);
 	StringInfoData buf;
 
 	pq_begintypsend(&buf);
@@ -372,8 +350,6 @@ url_send(PG_FUNCTION_ARGS)
  * A practical Url datatype would provide much more than this, of course.
  *****************************************************************************/
 
-
-
 /*****************************************************************************
  * Operator class for defining B-tree index
  *
@@ -385,99 +361,123 @@ url_send(PG_FUNCTION_ARGS)
  * an internal three-way-comparison function, as we do here.
  *****************************************************************************/
 
-
-
-
 PG_FUNCTION_INFO_V1(url_abs_lt);
 
-Datum
-url_abs_lt(PG_FUNCTION_ARGS)
-{
-	Url    *a = (Url *) PG_GETARG_POINTER(0);
-	Url    *b = (Url *) PG_GETARG_POINTER(1);
+Datum url_abs_lt(PG_FUNCTION_ARGS) {
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(strcmp(a, b) != 0);
+	int isEqual = isUrlEqual(a, b);
+	int isLessThan = !isEqual;
+	if (!isEqual) {
+		char * aa = malloc(strlen(a->host), strlen(a->path));
+		char * bb = malloc(strlen(b->host), strlen(b->path));
+		strcpy(aa, a->host);
+		strcpy(bb, b->host);
+		strcat(aa, "/");
+		strcat(bb, "/");
+		strcat(aa, a->path);
+		strcat(bb, b->path);
+		int i = 0;
+		for (i = strlen(aa) - 1; i >= 0; i--) {
+			if (aa[i] != '/')
+				continue;
+			else {
+				aa[i] = '\0';
+				break;
+			}
+		}
+		for (i = strlen(bb) - 1; i >= 0; i--) {
+			if (bb[i] != '/')
+				continue;
+			else {
+				bb[i] = '\0';
+				break;
+			}
+		}
+		//if aa is less than bb, then aa.lengh < bb.lenth
+		if (strlen(aa) >= strlen(bb))
+			isLessThan = 0;
+		else {
+//			strstr() Return Value
+//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
+			if (strstr(aa, bb) == NULL)
+				isLessThan = 1;
+			else
+				isLessThan = 0;
+		}
+
+	}
+	//none zero return true
+	PG_RETURN_BOOL(isLessThan);
 }
 
 PG_FUNCTION_INFO_V1(url_abs_le);
 
-Datum
-url_abs_le(PG_FUNCTION_ARGS)
-{
-	Url    *a = (Url *) PG_GETARG_POINTER(0);
-	Url    *b = (Url *) PG_GETARG_POINTER(1);
+Datum url_abs_le(PG_FUNCTION_ARGS) {
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) <= 0);
 }
 
+int isUrlEqual(Url* a, Url* b) {
+	int isEqual = 1; // 1 means equal
+	if (strcmp(a->host, b->host) == 0 && strcmp(a->path, b->path) == 0 &&
+
+	strcmp(a->params, b->params) == 0 && isEqual)
+		isEqual = 1;
+	else
+		isEqual = 0;
+
+	if (isEqual) {
+		if ((strcmp(a->scheme, b->scheme) == 0 && strcmp(a->port, b->port) == 0)
+				|| ((strcmp(a->scheme, "http") == 0
+						|| strcmp(b->scheme, "https") == 0)
+						&& (strcmp(b->scheme, "http") == 0
+								|| strcmp(a->scheme, "https") == 0)
+						&& strcmp(a->port, b->port) == 0))
+			isEqual = 1;
+	} else
+		isEqual = 0;
+	return isEqual;
+}
+
 PG_FUNCTION_INFO_V1(url_abs_eq);
 
-Datum
-url_abs_eq(PG_FUNCTION_ARGS)
-{
+Datum url_abs_eq(PG_FUNCTION_ARGS) {
 
-	Url    *a = (Url *) PG_GETARG_POINTER(0);
-	Url    *b = (Url *) PG_GETARG_POINTER(1);
-	int isEqual = 1; // 1 means equal
-	if (
-			strcmp(a->host,b->host) == 0 &&
-			strcmp(a->path,b->path) == 0 &&
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 
-			strcmp(a->params,b->params) == 0 &&
-			isEqual)
-		isEqual = 1;
-	else
-		isEqual = 0;
+	int isEqual = isUrlEqual(a, b);
 
-	if (isEqual)
-	{
-	if (
-				(strcmp(a->scheme,b->scheme) == 0 && strcmp(a->port,b->port) == 0)
-				||
-				(
-				(strcmp(a->scheme,"http") == 0 || strcmp(b->scheme,"https") == 0) &&
-				(strcmp(b->scheme,"http") == 0 || strcmp(a->scheme,"https") == 0) &&
-				strcmp(a->port,b->port) == 0
-				)
-		)
-		isEqual = 1;
-	}
-	else
-		isEqual = 0;
-
-
-	PG_RETURN_BOOL( isEqual );
+	PG_RETURN_BOOL( isEqual);
 }
 
 PG_FUNCTION_INFO_V1(url_abs_ge);
 
-Datum
-url_abs_ge(PG_FUNCTION_ARGS)
-{
-	Url    *a = (Url *) PG_GETARG_POINTER(0);
-	Url    *b = (Url *) PG_GETARG_POINTER(1);
+Datum url_abs_ge(PG_FUNCTION_ARGS) {
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) >= 0);
 }
 
 PG_FUNCTION_INFO_V1(url_abs_gt);
 
-Datum
-url_abs_gt(PG_FUNCTION_ARGS)
-{
-	Url    *a = (Url *) PG_GETARG_POINTER(0);
-	Url    *b = (Url *) PG_GETARG_POINTER(1);
+Datum url_abs_gt(PG_FUNCTION_ARGS) {
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) > 0);
 }
 
 PG_FUNCTION_INFO_V1(url_abs_cmp);
 
-Datum
-url_abs_cmp(PG_FUNCTION_ARGS)
-{
-	Url    *a = (Url *) PG_GETARG_POINTER(0);
-	Url    *b = (Url *) PG_GETARG_POINTER(1);
+Datum url_abs_cmp(PG_FUNCTION_ARGS) {
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_INT32(url_abs_cmp_internal(a, b));
 }
