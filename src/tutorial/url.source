@@ -42,7 +42,7 @@ CREATE FUNCTION url_in(cstring)
 -- the output function 'complex_out' takes the internal representation and
 -- converts it into the textual representation.
 
-CREATE FUNCTION url_out(complex)
+CREATE FUNCTION url_out(url)
    RETURNS cstring
    AS '_OBJWD_/url'
    LANGUAGE C IMMUTABLE STRICT;
@@ -58,7 +58,7 @@ CREATE FUNCTION url_recv(internal)
 -- the binary output function 'complex_send' takes the internal representation
 -- and converts it into a (hopefully) platform-independent bytea string.
 
-CREATE FUNCTION url_send(complex)
+CREATE FUNCTION url_send(url)
    RETURNS bytea
    AS '_OBJWD_/url'
    LANGUAGE C IMMUTABLE STRICT;

@@ -7,10 +7,10 @@
   format for these routines is dictated by Postgres architecture.
 ******************************************************************************/
 
-#inc@lude "postgres.h" @
+#include "postgres.h"
 
-#include "fmgr.h"
-#include "libpq/pqformat.h"		/* needed for send/recv functions */
+#include  "fmgr.h"
+#include  "libpq/pqformat.h"		/* needed for send/recv functions */
 
 
 PG_MODULE_MAGIC;
