@@ -25,6 +25,7 @@ Url *parseURL(char *);
 void printParsedURL(Url *);
 Url *makeParsedURL();
 Url *freeParsedURL(Url *);
+int isLessthan(Url *, Url *);
 
 char *str_n_dup(char *str, int n) {
 	char *new = malloc(n + 1);
@@ -370,48 +371,53 @@ Datum url_abs_lt(PG_FUNCTION_ARGS) {
 	int isEqual = isUrlEqual(a, b);
 	int isLessThan = !isEqual;
 	if (!isEqual) {
-		char * aa = malloc(strlen(a->host) + strlen(a->path) + 1);
-		char * bb = malloc(strlen(b->host) + strlen(b->path) + 1);
-		strcpy(aa, a->host);
-		strcpy(bb, b->host);
-		strcat(aa, "/");
-		strcat(bb, "/");
-		strcat(aa, a->path);
-		strcat(bb, b->path);
-		int i = 0;
-		for (i = strlen(aa) - 1; i >= 0; i--) {
-			if (aa[i] != '/')
-				continue;
-			else {
-				aa[i] = '\0';
-				break;
-			}
-		}
-		for (i = strlen(bb) - 1; i >= 0; i--) {
-			if (bb[i] != '/')
-				continue;
-			else {
-				bb[i] = '\0';
-				break;
-			}
-		}
-		//if aa is less than bb, then aa.lengh < bb.lenth
-		if (strlen(aa) <= strlen(bb))
-			isLessThan = 0;
-		else {
-//			strstr() Return Value
-//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
-			if (strstr(aa, bb) == NULL)
-				isLessThan = 0;
-			else
-				isLessThan = 1;
-		}
+		isLessThan = isLessthan(a, b);
 
 	}
 	//none zero return true
 	PG_RETURN_BOOL(isLessThan);
 }
 
+int isLessthan(Url *a, Url *b){
+	int isLessThan = 0;
+	char * aa = malloc(strlen(a->host) + strlen(a->path) + 1);
+	char * bb = malloc(strlen(b->host) + strlen(b->path) + 1);
+	strcpy(aa, a->host);
+	strcpy(bb, b->host);
+	strcat(aa, "/");
+	strcat(bb, "/");
+	strcat(aa, a->path);
+	strcat(bb, b->path);
+	int i = 0;
+	for (i = strlen(aa) - 1; i >= 0; i--) {
+		if (aa[i] != '/')
+			continue;
+		else {
+			aa[i] = '\0';
+			break;
+		}
+	}
+	for (i = strlen(bb) - 1; i >= 0; i--) {
+		if (bb[i] != '/')
+			continue;
+		else {
+			bb[i] = '\0';
+			break;
+		}
+	}
+	//if aa is less than bb, then aa.lengh < bb.lenth
+	if (strlen(aa) <= strlen(bb))
+		isLessThan = 0;
+	else {
+		//			strstr() Return Value
+		//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
+		if (strstr(aa, bb) == NULL)
+			isLessThan = 0;
+		else
+			isLessThan = 1;
+	}
+	return isLessThan;
+}
 PG_FUNCTION_INFO_V1(url_abs_le);
 
 Datum url_abs_le(PG_FUNCTION_ARGS) {
@@ -469,8 +475,15 @@ PG_FUNCTION_INFO_V1(url_abs_gt);
 Datum url_abs_gt(PG_FUNCTION_ARGS) {
 	Url *a = (Url *) PG_GETARG_POINTER(0);
 	Url *b = (Url *) PG_GETARG_POINTER(1);
+	int isEqual = isUrlEqual(a, b);
+	int isgreatThan = !isEqual;
+	if (!isEqual) {
+		isgreatThan = isLessthan(a, b);
 
-	PG_RETURN_BOOL(url_abs_cmp_internal(a, b) > 0);
+	}
+	//none zero return true
+	PG_RETURN_BOOL(isgreatThan);
+
 }
 
 PG_FUNCTION_INFO_V1(url_abs_cmp);
