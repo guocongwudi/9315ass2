@@ -370,8 +370,8 @@ Datum url_abs_lt(PG_FUNCTION_ARGS) {
 	int isEqual = isUrlEqual(a, b);
 	int isLessThan = !isEqual;
 	if (!isEqual) {
-		char * aa = malloc(strlen(a->host), strlen(a->path));
-		char * bb = malloc(strlen(b->host), strlen(b->path));
+		char * aa = malloc(strlen(a->host) + strlen(a->path) + 1);
+		char * bb = malloc(strlen(b->host) + strlen(b->path) + 1);
 		strcpy(aa, a->host);
 		strcpy(bb, b->host);
 		strcat(aa, "/");
@@ -396,15 +396,15 @@ Datum url_abs_lt(PG_FUNCTION_ARGS) {
 			}
 		}
 		//if aa is less than bb, then aa.lengh < bb.lenth
-		if (strlen(aa) >= strlen(bb))
+		if (strlen(aa) <= strlen(bb))
 			isLessThan = 0;
 		else {
 //			strstr() Return Value
 //			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
 			if (strstr(aa, bb) == NULL)
-				isLessThan = 1;
-			else
 				isLessThan = 0;
+			else
+				isLessThan = 1;
 		}
 
 	}
