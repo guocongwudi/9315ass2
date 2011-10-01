@@ -260,8 +260,7 @@ void main(void) {
 
 		result = strcat( result, url->host);
 		result = strcat( result,    ":");
-		result = strcat( result,  url->port  );
-		result = strcat( result,  "/"  );
+	result = strcat( result,  "/"  );
 
 		if(url->path!=NULL)
 		{
