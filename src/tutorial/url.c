@@ -64,6 +64,10 @@ Url *parseURL(char *url) {
 
 	// copy scheme
 	purl->scheme = str_n_dup(c, d - c);
+	for (i = 0; i < strlen(purl->scheme); i++) {
+		purl->scheme[i] = tolower(purl->scheme[i]);
+	}
+
 	// must be "http" or "https"
 	if (strcmp(purl->scheme, "http") != 0 && strcmp(purl->scheme, "https") != 0)
 		return freeParsedURL(purl);
@@ -139,20 +143,20 @@ Url *parseURL(char *url) {
 				d++;
 			}
 			purl->path = str_n_dup(c, d - c);
-			char *tmp;
+			char *tmp = malloc(strlen(purl->path));
 			int douslash = 0;
 			int index = 0;
 			for (int i = 0; i < strlen(purl->path); i++) {
 				if (purl->path[i] == '/') {
 					if (douslash != 1) {
-						*tmp[index++] = purl->path[i];
+						tmp[index++] = purl->path[i];
 					}
 					douslash = 1;
 				}
 
 				else {
 					douslash = 0;
-					*tmp[index++] = purl->path[i];
+					tmp[index++] = purl->path[i];
 				}
 
 			}
@@ -194,9 +198,6 @@ Url *parseURL(char *url) {
 		purl->port[i] = tolower(purl->port[i]);
 	}
 
-	for (i = 0; i < strlen(purl->scheme); i++) {
-		purl->scheme[i] = tolower(purl->scheme[i]);
-	}
 
 	return purl;
 }
