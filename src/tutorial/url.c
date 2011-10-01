@@ -69,6 +69,7 @@ Url *parseURL(char *url) {
 
 	// copy scheme
 	purl->scheme = str_n_dup(c, d - c);
+	int i;
 	for (i = 0; i < strlen(purl->scheme); i++) {
 		purl->scheme[i] = tolower(purl->scheme[i]);
 	}
@@ -153,7 +154,7 @@ Url *parseURL(char *url) {
 			char *tmp = malloc(strlen(purl->path));
 			int douslash = 0;
 			int index = 0;
-			for (int i = 0; i < strlen(purl->path); i++) {
+			for (i = 0; i < strlen(purl->path); i++) {
 				if (purl->path[i] == '/') {
 					if (douslash != 1) {
 						tmp[index++] = purl->path[i];
@@ -186,7 +187,7 @@ Url *parseURL(char *url) {
 			purl->params = strdup(c);
 		}
 	}
-	int i;
+
 
 	for(i = 0; purl->params != NULL && i < strlen(purl->params); i++) {
 //		printf("%s \n", purl->params[i]);
