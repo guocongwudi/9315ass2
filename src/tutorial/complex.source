@@ -71,8 +71,8 @@ CREATE TYPE complex (
    input = complex_in,
    output = complex_out,
    receive = complex_recv,
-   send = complex_send,
-   alignment = double
+   send = complex_send
+ --  alignment = double
 );
 
 

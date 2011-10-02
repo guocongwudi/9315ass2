@@ -1,3 +1,6 @@
+
+DROP TABLE test_url;
+DROP TYPE  url CASCADE;
 ---------------------------------------------------------------------------
 --
 -- complex.sql-
@@ -8,7 +11,7 @@
 -- Portions Copyright (c) 1996-2010, PostgreSQL Global Development Group
 -- Portions Copyright (c) 1994, Regents of the University of California
 --
--- $PostgreSQL: pgsql/src/tutorial/complex.source,v 1.24 2010/01/02 16:58:17 momjian Exp $
+-- $PostgreSQL: pgsql/src/tutorial/url.source,v 1.24 2010/01/02 16:58:17 momjian Exp $
 --
 ---------------------------------------------------------------------------
 
@@ -68,12 +71,13 @@ CREATE FUNCTION url_send(url)
 -- memory block required to hold the type (we need two 8-byte doubles).
 
  CREATE TYPE url (
-   internallength = 16, 
+   internallength = variable, 
    input = url_in,
    output = url_out,
-   receive = url_recv,
-   send = url_send,
-   alignment = double
+ receive = url_recv,
+  send = url_send
+ --alignment = char
+ 
 );
 
 
@@ -85,17 +89,17 @@ CREATE FUNCTION url_send(url)
 -- eg. we can use it in a table
 
 CREATE TABLE test_url (
-	a	url,
-	b	url
+	a	url
+
 );
 
 -- data for user-defined types are just strings in the proper textual
 -- representation. 
 
 INSERT INTO test_url VALUES ('http://www.baidu.com/');
-INSERT INTO test_url VALUES ('http//www.baidu.com/aaa/aa/aaa?a=a');
+INSERT INTO test_url VALUES ('http://www.baidu.com/aaa/aa/aaa?a=a');
 
-SELECT * FROM test_url;
+--SELECT * FROM test_url;
 
 -----------------------------
 -- Creating an operator for the new type:
@@ -105,5 +109,3 @@ SELECT * FROM test_url;
 --	arguments.)
 -----------------------------
 
-DROP TABLE test_url;
-DROP TYPE complex url;

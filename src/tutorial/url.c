@@ -9,6 +9,7 @@
 #include "postgres.h"
 #include "fmgr.h"
 #include "libpq/pqformat.h"		/* needed for send/recv functions */
+
 PG_MODULE_MAGIC
 ;
 
@@ -27,8 +28,14 @@ Url *makeParsedURL();
 Url *freeParsedURL(Url *);
 int isLessthan(Url *, Url *);
 
+int url_abs_cmp_internal(Url *, Url*);
+int url_abs_cmp_internal(Url * a, Url* b){
+
+
+}
+
 char *str_n_dup(char *str, int n) {
-	char *new = malloc(n + 1);
+	char *new = palloc(n + 1);
 	if (new == NULL
 	)
 		return NULL;
@@ -114,11 +121,11 @@ Url *parseURL(char *url) {
 	//	default port
 	if (purl->port == NULL) {
 		if (strcmp(purl->scheme, "http") == 0) {
-			purl->port = malloc(3);
+			purl->port = palloc(40);
 			strcpy(purl->port, "80");
 			purl->port[2] = '\0';
 		} else {
-			purl->port = malloc(4);
+			purl->port = palloc(40);
 			strcpy(purl->port, "443");
 			purl->port[3] = '\0';
 		}
@@ -145,7 +152,7 @@ Url *parseURL(char *url) {
 				d++;
 			}
 			purl->path = str_n_dup(c, d - c);
-			char *tmp = malloc(strlen(purl->path));
+			char *tmp = palloc(strlen(purl->path)+100);
 			int douslash = 0;
 			int index = 0;
 			for (i = 0; i < strlen(purl->path); i++) {
@@ -168,7 +175,7 @@ Url *parseURL(char *url) {
 //	********************merge**********************//
 	//	default path
 	if (purl->path == NULL) {
-		purl->path = malloc(11);
+		purl->path = palloc(110);
 		strcpy(purl->path, "index.html");
 		purl->path[10] = '\0';
 	}
@@ -206,7 +213,7 @@ Url *parseURL(char *url) {
 
 Url *makeParsedURL() {
 	Url *purl;
-	if ((purl = malloc(sizeof(Url))) == NULL
+	if ((purl = palloc(sizeof(Url))) == NULL
 	)
 		return NULL;
 	purl->scheme = NULL;
@@ -264,49 +271,35 @@ Datum url_abs_cmp(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(url_in);
 
 Datum url_in(PG_FUNCTION_ARGS) {
+
 	char *str = PG_GETARG_CSTRING(0);
+	int len = strlen(str);
+	text   * vardata;
 
-	Url * url;
-	url = parseURL(str);
-	if (url == NULL
-)
-				ereport(
-				ERROR,
-				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for Url: \"%s\"", str)));
+	vardata = (text *) cstring_to_text(str);
+//	SET_VARSIZE(vardata, len + VARHDRSZ);
 
-	PG_RETURN_POINTER(url);
+	//char * tmp = text_to_cstring((text *) vardata);
+//	fprintf(stderr, "the result: -----%s\n", tmp);
+
+
+	PG_RETURN_POINTER(vardata);
+
 }
 
 PG_FUNCTION_INFO_V1(url_out);
 
 Datum url_out(PG_FUNCTION_ARGS) {
-	Url *url = (Url *) PG_GETARG_POINTER(0);
-	char *result = "";
 
-	int url_len = 0;
-	url_len = strlen(url->host) + strlen(url->params) + strlen(url->path)
-			+ strlen(url->port) + strlen(url->scheme);
 
-	result = (char *) palloc(url_len+5);
-	result = strcat(result, url->scheme);
-	result = strcat(result, "://");
 
-	result = strcat(result, url->host);
-	result = strcat(result, ":");
-	result = strcat(result, url->port);
-	result = strcat(result, "/");
-
-	if (url->path != NULL)
-	{
-		result = strcat(result, url->path);
-	}
-	if (url->params != NULL)
-	{
-		result = strcat(result, "?");
-		result = strcat(result, url->params);
-	}
-
-	PG_RETURN_CSTRING(result);
+	fprintf(stderr, "come from out------------------start\n");
+	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+	fprintf(stderr, "come from out------------------size:%d\n",VARSIZE(x));
+//	text * x = (text *) PG_GETARG_POINTER(0);
+	char *str = text_to_cstring((text *) x);
+	fprintf(stderr, "the result: -----%s\n", str);
+	return str;
 }
 
 /*****************************************************************************
@@ -318,6 +311,7 @@ Datum url_out(PG_FUNCTION_ARGS) {
 PG_FUNCTION_INFO_V1(url_recv);
 
 Datum url_recv(PG_FUNCTION_ARGS) {
+	fprintf(stderr, "come from rec------------------start\n");
 	StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
 	Url *result;
 
@@ -327,12 +321,15 @@ Datum url_recv(PG_FUNCTION_ARGS) {
 	result->path = pq_getstring(buf);
 	result->port = pq_getstring(buf);
 	result->scheme = pq_getstring(buf);
+	fprintf(stderr, "come from rev------------------end\n");
 	PG_RETURN_POINTER(result);
+
 }
 
 PG_FUNCTION_INFO_V1(url_send);
 
 Datum url_send(PG_FUNCTION_ARGS) {
+	fprintf(stderr, "come from send------------------start\n");
 	Url *url = (Url *) PG_GETARG_POINTER(0);
 	StringInfoData buf;
 
@@ -342,6 +339,7 @@ Datum url_send(PG_FUNCTION_ARGS) {
 	pq_sendstring(&buf, url->path);
 	pq_sendstring(&buf, url->port);
 	pq_sendstring(&buf, url->scheme);
+	fprintf(stderr, "come from out------------------end\n");
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
@@ -380,8 +378,8 @@ Datum url_abs_lt(PG_FUNCTION_ARGS) {
 
 int isLessthan(Url *a, Url *b){
 	int isLessThan = 0;
-	char * aa = malloc(strlen(a->host) + strlen(a->path) + 1);
-	char * bb = malloc(strlen(b->host) + strlen(b->path) + 1);
+	char * aa = palloc(strlen(a->host) + strlen(a->path) + 1);
+	char * bb = palloc(strlen(b->host) + strlen(b->path) + 1);
 	strcpy(aa, a->host);
 	strcpy(bb, b->host);
 	strcat(aa, "/");
