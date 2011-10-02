@@ -27,7 +27,7 @@ void printParsedURL(Url *);
 Url *makeParsedURL();
 Url *freeParsedURL(Url *);
 int isLessthan(Url *, Url *);
-int isGreatthan(Url *a, Url *b)
+int isGreatthan(Url *, Url *);
 
 int url_abs_cmp_internal(Url *, Url*);
 int url_abs_cmp_internal(Url * a, Url* b){
