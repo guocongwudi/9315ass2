@@ -27,7 +27,7 @@ void printParsedURL(Url *);
 Url *makeParsedURL();
 Url *freeParsedURL(Url *);
 int isLessthan(Url *, Url *);
-int isGreatthan(Url *, Url *);
+int isGreatthan(Url *a, Url *b)
 
 int url_abs_cmp_internal(Url *, Url*);
 int url_abs_cmp_internal(Url * a, Url* b){
@@ -36,8 +36,14 @@ int url_abs_cmp_internal(Url * a, Url* b){
 }
 
 char *str_n_dup(char *str, int n) {
+<<<<<<< HEAD
 	char *new = palloc(n + 1);
+	if (new == NULL
+	)
+=======
+	char *new = malloc(n + 1);
 	if (new == NULL)
+>>>>>>> 44e801ac402462d3d662596cc2099d770cfaee65
 		return NULL;
 	strncpy(new, str, n);
 	new[n] = '\0';
@@ -209,8 +215,12 @@ Url *parseURL(char *url) {
 
 Url *makeParsedURL() {
 	Url *purl;
+<<<<<<< HEAD
 	if ((purl = palloc(sizeof(Url))) == NULL
 	)
+=======
+	if ((purl = malloc(sizeof(Url))) == NULL)
+>>>>>>> 44e801ac402462d3d662596cc2099d770cfaee65
 		return NULL;
 	purl->scheme = NULL;
 	purl->host = NULL;
@@ -272,6 +282,15 @@ Datum url_in(PG_FUNCTION_ARGS) {
 	//char * tmp = text_to_cstring((text *) vardata);
 //	fprintf(stderr, "the result: -----%s\n", tmp);
 
+<<<<<<< HEAD
+=======
+	Url * url;
+	url = parseURL(str);
+	if (url == NULL)
+		ereport(
+				ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for Url: \"%s\"", str)));
+>>>>>>> 44e801ac402462d3d662596cc2099d770cfaee65
 
 	PG_RETURN_POINTER(vardata);
 
@@ -283,6 +302,7 @@ Datum url_out(PG_FUNCTION_ARGS) {
 
 
 
+<<<<<<< HEAD
 	fprintf(stderr, "come from out------------------start\n");
 	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
 	fprintf(stderr, "come from out------------------size:%d\n",VARSIZE(x));
@@ -290,6 +310,22 @@ Datum url_out(PG_FUNCTION_ARGS) {
 	char *str = text_to_cstring((text *) x);
 	fprintf(stderr, "the result: -----%s\n", str);
 	return str;
+=======
+	result = strcat(result, url->host);
+	result = strcat(result, ":");
+	result = strcat(result, url->port);
+	result = strcat(result, "/");
+
+	if (url->path != NULL) {
+		result = strcat(result, url->path);
+	}
+	if (url->params != NULL) {
+		result = strcat(result, "?");
+		result = strcat(result, url->params);
+	}
+
+	PG_RETURN_CSTRING(result);
+>>>>>>> 44e801ac402462d3d662596cc2099d770cfaee65
 }
 
 /*****************************************************************************
