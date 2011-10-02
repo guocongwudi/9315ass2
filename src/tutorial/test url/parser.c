@@ -14,6 +14,7 @@ char *str_n_dup(char *, int);
 Url *parseURL(char *);
 Url *makeParsedURL();
 Url *freeParsedURL(Url *);
+int isGreatthan(Url *, Url *);
 
 char *str_n_dup(char *str, int n) {
 	char *new = malloc(n + 1);
@@ -198,21 +199,22 @@ int isUrlEqual(Url* a, Url* b) {
 	int isEqual = 1; // 1 means equal
 	if (strcmp(a->host, b->host) == 0 && strcmp(a->path, b->path) == 0 &&
 
-	strcmp(a->params, b->params) == 0 && isEqual)
+	strcmp(a->params, b->params) == 0 && isEqual) {
 		isEqual = 1;
-	else
+	} else
 		isEqual = 0;
 
 	if (isEqual) {
-		if ((strcmp(a->scheme, b->scheme) == 0 && strcmp(a->port, b->port) == 0)
-				|| ((strcmp(a->scheme, "http") == 0
-						|| strcmp(b->scheme, "https") == 0)
-						&& (strcmp(b->scheme, "http") == 0
-								|| strcmp(a->scheme, "https") == 0)
-						&& strcmp(a->port, b->port) == 0))
+		if ((strcmp(a->scheme, b->scheme) == 0)
+				&& (strcmp(a->port, b->port) == 0)) {
 			isEqual = 1;
-	} else
-		isEqual = 0;
+		} else if ((strcmp(a->scheme, b->scheme) != 0)
+				&& (strcmp(a->port, b->port) == 0)) {
+			isEqual = 1;
+		} else {
+			isEqual = 0;
+		}
+	}
 	return isEqual;
 }
 
@@ -224,18 +226,47 @@ void main(void) {
 	char* line;
 	char* line1;
 	char* line2;
+	char* line3;
 
 	line = "http://www.AAAA.com/song/play?ids=/song/playlist/id/7335983/type/3";
-	line1 = "https://www.AAAA.com/play:80?ids=/song/playlist/id/7335983/3";
+	line1 = "http://www.AAAA.com:80/play:80?ids=/song/playlist/id/7335983/3";
+	line3 = "https://www.AAAA.com:80/play:80?ids=/song/playlist/id/7335983/3";
 	line2 =
 			"http://www.AAAA.com/song/play:80?ids=/song/playlist/id/7335983/type/4";
 	url = parseURL(line);
-	a = parseURL(line1);
-	b = parseURL(line2);
 
+	a = parseURL(line1);
+	b = parseURL(line3);
+//	printf("a port number %s a scheme %s\n", a->port, a->scheme);
+//	printf("b port number %s b scheme %s\n", b->port, b->scheme);
+//	int isEqual = isUrlEqual(a, b);
+//	int isLessThan = !isEqual;
+//	int isGreatThan = !isEqual;
+//	if (!isEqual) {
+//		isGreatThan = isGreatthan(url, b);
+//
+//	}
 	int isEqual = isUrlEqual(a, b);
-	int isLessThan = !isEqual;
-	if (!isEqual) {
+	int isGreatThan = isGreatthan(a, b);
+	int isEquOrGreat = 0;
+	if (isEqual || isGreatThan)
+		isEquOrGreat = 1;
+	else
+		isEquOrGreat = 0;
+
+	printf("\n--------is great than--------\n");
+	printf("%d\n", isEqual);
+}
+
+
+int isGreatthan(Url *a, Url *b) {
+	int isGreatThan = 0;
+	char * aa = malloc(strlen(a->host) + strlen(a->path) + 1);
+	char * bb = malloc(strlen(b->host) + strlen(b->path) + 1);
+	strcpy(aa, a->host);
+	strcpy(bb, b->host);
+	int isLessthan(Url *a, Url *b) {
+		int isLessThan = 0;
 		char * aa = malloc(strlen(a->host) + strlen(a->path) + 1);
 		char * bb = malloc(strlen(b->host) + strlen(b->path) + 1);
 		strcpy(aa, a->host);
@@ -244,10 +275,6 @@ void main(void) {
 		strcat(bb, "/");
 		strcat(aa, a->path);
 		strcat(bb, b->path);
-
-		printf("\n%s\n", aa);
-		printf("\n%s\n", bb);
-
 		int i = 0;
 		for (i = strlen(aa) - 1; i >= 0; i--) {
 			if (aa[i] != '/')
@@ -265,28 +292,50 @@ void main(void) {
 				break;
 			}
 		}
-
-		printf("\n%s\n", aa);
-		printf("\n%s\n", bb);
-		printf("--");
-		printf("%d\n", strstr(aa, bb) == NULL);
-		printf("%d\n", strstr(aa, bb));
-		printf("%d\n", strstr(bb,aa));
-
 		//if aa is less than bb, then aa.lengh < bb.lenth
-		if (strlen(aa) >= strlen(bb))
+		if (strlen(aa) <= strlen(bb))
 			isLessThan = 0;
 		else {
-//			strstr() Return Value
-//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
+			//			strstr() Return Value
+			//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
 			if (strstr(aa, bb) == NULL)
-				isLessThan = 1;
-			else
 				isLessThan = 0;
+			else
+				isLessThan = 1;
 		}
-
+		return isLessThan;
 	}
-
-	printf("\n--------is less than--------\n");
-	printf("%d\n", isLessThan);
+	strcat(aa, "/");
+	strcat(bb, "/");
+	strcat(aa, a->path);
+	strcat(bb, b->path);
+	int i = 0;
+	for (i = strlen(aa) - 1; i >= 0; i--) {
+		if (aa[i] != '/')
+			continue;
+		else {
+			aa[i] = '\0';
+			break;
+		}
+	}
+	for (i = strlen(bb) - 1; i >= 0; i--) {
+		if (bb[i] != '/')
+			continue;
+		else {
+			bb[i] = '\0';
+			break;
+		}
+	}
+	//if aa is less than bb, then aa.lengh < bb.lenth
+	if (strlen(aa) >= strlen(bb))
+		isGreatThan = 0;
+	else {
+		//			strstr() Return Value
+		//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
+		if (strstr(aa, bb) == NULL)
+			isGreatThan = 1;
+		else
+			isGreatThan = 0;
+	}
+	return isGreatThan;
 }
