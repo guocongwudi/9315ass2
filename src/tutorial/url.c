@@ -27,6 +27,7 @@ Url *makeParsedURL();
 Url *freeParsedURL(Url *);
 int isLessthan(Url *, Url *);
 int isGreatthan(Url *, Url *);
+static int isUrlEqual(Url* , Url* ) ;
 
 int url_abs_cmp_internal(Url *, Url*);
 int url_abs_cmp_internal(Url * a, Url* b) {
@@ -266,13 +267,13 @@ Datum url_in(PG_FUNCTION_ARGS);
 Datum url_out(PG_FUNCTION_ARGS);
 Datum url_recv(PG_FUNCTION_ARGS);
 Datum url_send(PG_FUNCTION_ARGS);
-Datum url_add(PG_FUNCTION_ARGS);
+//Datum url_add(PG_FUNCTION_ARGS);
 Datum url_abs_lt(PG_FUNCTION_ARGS);
 Datum url_abs_le(PG_FUNCTION_ARGS);
 Datum url_abs_eq(PG_FUNCTION_ARGS);
 Datum url_abs_ge(PG_FUNCTION_ARGS);
 Datum url_abs_gt(PG_FUNCTION_ARGS);
-Datum url_abs_cmp(PG_FUNCTION_ARGS);
+//Datum url_abs_cmp(PG_FUNCTION_ARGS);
 
 /*****************************************************************************
  * Input/Output functions
@@ -412,6 +413,8 @@ Datum url_abs_lt(PG_FUNCTION_ARGS) {
 	PG_RETURN_BOOL(isLessThan);
 }
 
+PG_FUNCTION_INFO_V1(isLessthan);
+
 int isLessthan(Url *a, Url *b) {
 	int isLessThan = 0;
 	char * aa = palloc(strlen(a->host) + strlen(a->path) + 1);
@@ -469,7 +472,8 @@ Datum url_abs_le(PG_FUNCTION_ARGS) {
 	PG_RETURN_BOOL(isEquOrLess);
 }
 
-int isUrlEqual(Url* a, Url* b) {
+PG_FUNCTION_INFO_V1(isUrlEqual);
+static int isUrlEqual(Url* a, Url* b) {
 	int isEqual = 1; // 1 means equal
 	if (strcmp(a->host, b->host) == 0 && strcmp(a->path, b->path) == 0 &&
 
@@ -495,13 +499,20 @@ int isUrlEqual(Url* a, Url* b) {
 PG_FUNCTION_INFO_V1(url_abs_eq);
 
 Datum url_abs_eq(PG_FUNCTION_ARGS) {
+printf("ddddddddddddddddddddddddddd");
+	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
+	char *str = text_to_cstring((text *) x);
+	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
+	char *str1 = text_to_cstring((text *) x1);
 
-	Url *a = (Url *) PG_GETARG_POINTER(0);
-	Url *b = (Url *) PG_GETARG_POINTER(1);
+	Url *a = parseURL(str);
+	printf("url a is %s", a);
+	Url *b =  parseURL(str1);
+	printf("url b is %s", b);
 
 	int isEqual = isUrlEqual(a, b);
 
-	PG_RETURN_BOOL( isEqual);
+	PG_RETURN_BOOL(isEqual);
 }
 
 PG_FUNCTION_INFO_V1(url_abs_ge);
@@ -535,6 +546,8 @@ Datum url_abs_gt(PG_FUNCTION_ARGS) {
 	PG_RETURN_BOOL(isgreatThan);
 
 }
+
+PG_FUNCTION_INFO_V1(isGreatthan);
 
 int isGreatthan(Url *a, Url *b) {
 	int isGreatThan = 0;
@@ -619,11 +632,11 @@ int isGreatthan(Url *a, Url *b) {
 	return isGreatThan;
 }
 
-PG_FUNCTION_INFO_V1(url_abs_cmp);
-
-Datum url_abs_cmp(PG_FUNCTION_ARGS) {
-	Url *a = (Url *) PG_GETARG_POINTER(0);
-	Url *b = (Url *) PG_GETARG_POINTER(1);
-
-	PG_RETURN_INT32(url_abs_cmp_internal(a, b));
-}
+//PG_FUNCTION_INFO_V1(url_abs_cmp);
+//
+//Datum url_abs_cmp(PG_FUNCTION_ARGS) {
+//	Url *a = (Url *) PG_GETARG_POINTER(0);
+//	Url *b = (Url *) PG_GETARG_POINTER(1);
+//
+//	PG_RETURN_INT32(url_abs_cmp_internal(a, b));
+//}
