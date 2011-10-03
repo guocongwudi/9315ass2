@@ -109,3 +109,96 @@ INSERT INTO test_url VALUES ('http://www.baidu.com/aaa/aa/aaa?a=a');
 --	arguments.)
 -----------------------------
 
+
+-----------------------------
+-- Interfacing New Types with Indexes:
+--	We cannot define a secondary index (eg. a B-tree) over the new type
+--	yet. We need to create all the required operators and support
+--      functions, then we can make the operator class.
+-----------------------------
+
+-- first, define the required operators
+CREATE FUNCTION url_abs_lt(url, url) RETURNS bool
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION url_abs_le(url, url) RETURNS bool
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION url_abs_eq(url, url) RETURNS bool
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION url_abs_ge(url, url) RETURNS bool
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION url_abs_gt(url, url) RETURNS bool
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+
+CREATE OPERATOR < (
+   leftarg = url, rightarg = url, procedure = url_abs_lt,
+   commutator = > , --negator = >= ,
+   restrict = scalarltsel, join = scalarltjoinsel
+);
+CREATE OPERATOR <= (
+   leftarg = url, rightarg = url, procedure = url_abs_le,
+   commutator = >= , --negator = > ,
+   restrict = scalarltsel, join = scalarltjoinsel
+);
+CREATE OPERATOR = (
+   leftarg = url, rightarg = url, procedure = url_abs_eq,
+   commutator = = 
+   -- leave out negator since we didn't create <> operator
+   -- negator = <> ,
+ --  restrict = eqsel, join = eqjoinsel
+);
+CREATE OPERATOR >= (
+   leftarg = url, rightarg = url, procedure = url_abs_ge,
+   commutator = <= , --negator = < ,
+   restrict = scalargtsel, join = scalargtjoinsel
+);
+CREATE OPERATOR > (
+   leftarg = url, rightarg = url, procedure = url_abs_gt,
+   commutator = < , --negator = <= ,
+   restrict = scalargtsel, join = scalargtjoinsel
+);
+
+-- create the support function too
+--CREATE FUNCTION isLessthan(url, url) RETURNS int4
+  --AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+  
+--  CREATE FUNCTION isUrlEqual(url, url) RETURNS int4
+  --AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+  
+--  CREATE FUNCTION isGreatthan(url, url) RETURNS int4
+  --AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+
+
+-- now we can make the operator class
+CREATE OPERATOR CLASS url_abs_ops
+    DEFAULT FOR TYPE url USING btree AS
+        OPERATOR        1       < ,
+        OPERATOR        2       <= ,
+        OPERATOR        3       = ,
+        OPERATOR        4       >= ,
+        OPERATOR        5       > ;
+  --      FUNCTION        1       isLessthan(url, url) ,
+    --    FUNCTION        2       isUrlEqual(url, url) ,
+      --  FUNCTION        3       isGreatthan(url, url) ;
+
+
+-- now, we can define a btree index on complex types. First, let's populate
+-- the table. Note that postgres needs many more tuples to start using the
+-- btree index during selects.
+INSERT INTO test_url VALUES ('http://www.baidu.com/aaa');
+INSERT INTO test_url VALUES ('http://www.baidu.com/aaa/aa?a=a');
+INSERT INTO test_url VALUES ('http://www.baidu.com/bbb');
+INSERT INTO test_url VALUES ('http://www.baidu.com/b/aa?a=a');
+
+SELECT * from test_url where a = 'http://www.baidu.com/aaa';
+--SELECT * from test_url where a < 'http://www.baidu.com/aaa/aa?a=a';
+--SELECT * from test_url where a > 'http://www.baidu.com/aaa/aa?a=a';
+
+
+--CREATE INDEX test_url_ind ON test_url
+  -- USING btree(a url_abs_ops);
+
+
+
+-- clean up the example
+--DROP TABLE test_url;
+--DROP TYPE url CASCADE;
