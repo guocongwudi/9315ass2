@@ -62,12 +62,6 @@ complex_in(PG_FUNCTION_ARGS)
 	result = (Complex *) palloc(sizeof(Complex));
 	result->x = x;
 	result->y = y;
-
-	 fprintf(stderr, "come from out@@@@@@@----------------##--asdasd\n");
-
-	Complex * gg=complex_recv(  complex_send(result)   );
-			  fprintf(stderr, "come from out@@@@@@@----------------##--%f\n",gg->x);
-
 	PG_RETURN_POINTER(result);
 }
 
