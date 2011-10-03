@@ -25,20 +25,19 @@ Url *parseURL(char *);
 void printParsedURL(Url *);
 Url *makeParsedURL();
 Url *freeParsedURL(Url *);
-int isLessthan(Url *, Url *);
-int isGreatthan(Url *, Url *);
-static int isUrlEqual(Url*, Url*);
+static int isLessthan(Url *, Url *);
+static int isGreatthan(Url *, Url *);
+static int isUrlEqual(Url* , Url* ) ;
 
 int url_abs_cmp_internal(Url *, Url*);
-int isSameWeb(Url *, Url *);
 int url_abs_cmp_internal(Url * a, Url* b) {
 
 }
 
 char *str_n_dup(char *str, int n) {
-	char *new = palloc(n + 1);
+	char *new = palloc(n + 12);
 	if (new == NULL
-	)
+		)
 		return NULL;
 	strncpy(new, str, n);
 	new[n] = '\0';
@@ -58,7 +57,7 @@ Url *parseURL(char *url) {
 
 	// create ParsedURL object
 	if ((purl = makeParsedURL()) == NULL
-	)
+		)
 		return NULL;
 
 	// start parse
@@ -99,7 +98,7 @@ Url *parseURL(char *url) {
 	purl->host = str_n_dup(c, d - c);
 	// must contain at least one dot
 	if (strchr(purl->host, '.') == NULL
-	)
+		)
 		return freeParsedURL(purl);
 
 	// copy port, if any
@@ -153,7 +152,7 @@ Url *parseURL(char *url) {
 				d++;
 			}
 			purl->path = str_n_dup(c, d - c);
-			char *tmp = palloc(strlen(purl->path)+100);
+			char *tmp = palloc(strlen(purl->path)+1);
 			int douslash = 0;
 			int index = 0;
 			for (i = 0; i < strlen(purl->path); i++) {
@@ -176,22 +175,24 @@ Url *parseURL(char *url) {
 //	********************merge**********************//
 	//	default path
 	if (purl->path == NULL) {
-		purl->path = palloc(110);
+		purl->path = palloc(11);
 		strcpy(purl->path, "index.html");
 		purl->path[10] = '\0';
-	} else {
-		int path_len = strlen(purl->path);
-		char * p = purl->path;
-		while (*p != '\0' && *p != '?')
-			p++;
-		if (*(p - 1) == '/') {
-
-			strcat(purl->path, "index.html");
-		}
-
 	}
-
 //		****************merge**********************//
+	else
+		{
+	        int path_len= strlen(purl->path );
+	        char * p=purl->path;
+	        while(*p!='\0'&& *p!='?')
+	        	p++;
+	        if(*(p-1)=='/'){
+
+	          strcat(purl->path,"index.html");
+	        }
+
+
+
 
 	// copy params, if any
 	if (*d != '\0') {
@@ -199,13 +200,6 @@ Url *parseURL(char *url) {
 		if (*d != '\0') {
 			purl->params = strdup(c);
 		}
-
-	}
-	if (purl->params == NULL)
-	{
-		purl->params = palloc(2);
-		strcpy(purl->params, " ");
-		purl->params[1] = '\0';
 	}
 
 	for (i = 0; purl->params != NULL && i < strlen(purl->params); i++) {
@@ -243,22 +237,22 @@ Url *makeParsedURL() {
 
 Url *freeParsedURL(Url *purl) {
 	if (purl == NULL
-	)
+		)
 		return NULL;
 	if (purl->scheme != NULL
-	)
+		)
 		free(purl->scheme);
 	if (purl->host != NULL
-	)
+		)
 		free(purl->host);
 	if (purl->port != NULL
-	)
+		)
 		free(purl->port);
 	if (purl->path != NULL
-	)
+		)
 		free(purl->path);
 	if (purl->params != NULL
-	)
+		)
 		free(purl->params);
 	free(purl);
 	return NULL;
@@ -279,34 +273,34 @@ Datum url_abs_le(PG_FUNCTION_ARGS);
 Datum url_abs_eq(PG_FUNCTION_ARGS);
 Datum url_abs_ge(PG_FUNCTION_ARGS);
 Datum url_abs_gt(PG_FUNCTION_ARGS);
-Datum url_abs_sameweb(PG_FUNCTION_ARGS);
-Datum url_abs_notsameweb(PG_FUNCTION_ARGS);
-Datum url_hash(PG_FUNCTION_ARGS);
-Datum url_abs_neq(PG_FUNCTION_ARGS);
 //Datum url_abs_cmp(PG_FUNCTION_ARGS);
 
 /*****************************************************************************
  * Input/Output functions
  *****************************************************************************/
+
 PG_FUNCTION_INFO_V1(url_in);
 
 Datum url_in(PG_FUNCTION_ARGS) {
 
 	char *str = PG_GETARG_CSTRING(0);
-	char * result = NULL;
+	char * result=NULL;
 	text * vardata;
 
-	fprintf(stderr, "come from in----------------##--%s\n", str);
+
+	fprintf(stderr, "come from out----------------##--%s\n",str);
 	Url *url = parseURL(str);
 
-	if (url != NULL) {
-		int len = strlen(url->host) + strlen(url->path) + strlen(url->port)
-				+ strlen(url->scheme);
-		if (url->params != NULL) {
-			len += strlen(url->params);
-		}
 
-		result = malloc(len + 6);
+
+	if (url != NULL) {
+		int len = strlen(url->host)  + strlen(url->path)
+				+ strlen(url->port) + strlen(url->scheme);
+		 if(url->params!=NULL){
+		            	len+=strlen(url->params);
+		            }
+
+		result = malloc(len+6);
 
 		strcpy(result, url->scheme);
 		strcat(result, "://");
@@ -315,7 +309,7 @@ Datum url_in(PG_FUNCTION_ARGS) {
 		strcat(result, url->port);
 		strcat(result, "/");
 		strcat(result, url->path);
-		if (strcmp(url->params, " ") != 0) {
+		if (url->params != NULL) {
 			strcat(result, "?");
 			strcat(result, url->params);
 		}
@@ -323,6 +317,8 @@ Datum url_in(PG_FUNCTION_ARGS) {
 	}
 
 	vardata = (text *) cstring_to_text(result);
+
+
 
 	//char * tmp = text_to_cstring((text *) vardata);
 //	fprintf(stderr, "the result: -----%s\n", tmp);
@@ -335,11 +331,12 @@ PG_FUNCTION_INFO_V1(url_out);
 
 Datum url_out(PG_FUNCTION_ARGS) {
 
+
 	text * x = (text *) PG_GETARG_POINTER(0);
 
 	char *str = text_to_cstring((text *) x);
-	fprintf(stderr, "the result: @@-----%s\n", str);
-	PG_RETURN_CSTRING(str);
+	fprintf(stderr, "the result: -----%s\n", x);
+	 PG_RETURN_CSTRING(str);
 }
 
 /*****************************************************************************
@@ -354,12 +351,14 @@ Datum url_recv(PG_FUNCTION_ARGS) {
 	fprintf(stderr, "come from rec------------------start\n");
 	StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
 	char *str;
-	text * result;
+text * result;
 
 	str = pq_getstring(buf);
-	result = (text *) cstring_to_text(str);
-	//fprintf(stderr, "come from rev------------------end\n");
+result=(text *) cstring_to_text(str);
+	fprintf(stderr, "come from rev------------------end\n");
 	PG_RETURN_POINTER(result);
+
+
 
 }
 
@@ -402,17 +401,8 @@ Datum url_send(PG_FUNCTION_ARGS) {
 PG_FUNCTION_INFO_V1(url_abs_lt);
 
 Datum url_abs_lt(PG_FUNCTION_ARGS) {
-
-	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-
-	char *str = text_to_cstring((text *) x);
-
-	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
-	char *str1 = text_to_cstring((text *) x1);
-
-	Url *a = parseURL(str);
-//	fprintf(stderr, "come from eq---5---%s ,%s-----------start\n",str1,str);
-	Url *b = parseURL(str1);
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 
 	int isEqual = isUrlEqual(a, b);
 	int isLessThan = !isEqual;
@@ -459,7 +449,7 @@ int isLessthan(Url *a, Url *b) {
 		//			strstr() Return Value
 		//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
 		if (strstr(aa, bb) == NULL
-		)
+			)
 			isLessThan = 0;
 		else
 			isLessThan = 1;
@@ -469,18 +459,8 @@ int isLessthan(Url *a, Url *b) {
 PG_FUNCTION_INFO_V1(url_abs_le);
 
 Datum url_abs_le(PG_FUNCTION_ARGS) {
-
-	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-
-	char *str = text_to_cstring((text *) x);
-
-	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
-	char *str1 = text_to_cstring((text *) x1);
-
-	Url *a = parseURL(str);
-	//fprintf(stderr, "come from eq---5---%s ,%s-----------start\n",str1,str);
-	Url *b = parseURL(str1);
-
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 	int isEqual = isUrlEqual(a, b);
 	int isLessThan = isLessthan(a, b);
 	int isEquOrLess = 0;
@@ -492,7 +472,7 @@ Datum url_abs_le(PG_FUNCTION_ARGS) {
 	PG_RETURN_BOOL(isEquOrLess);
 }
 
-PG_FUNCTION_INFO_V1(isUrlEqual);
+
 static int isUrlEqual(Url* a, Url* b) {
 	int isEqual = 1; // 1 means equal
 	if (strcmp(a->host, b->host) == 0 && strcmp(a->path, b->path) == 0 &&
@@ -519,61 +499,27 @@ static int isUrlEqual(Url* a, Url* b) {
 PG_FUNCTION_INFO_V1(url_abs_eq);
 
 Datum url_abs_eq(PG_FUNCTION_ARGS) {
-
+printf("ddddddddddddddddddddddddddd");
 	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-
 	char *str = text_to_cstring((text *) x);
-
 	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
 	char *str1 = text_to_cstring((text *) x1);
 
 	Url *a = parseURL(str);
-	//fprintf(stderr, "come from eq---5---%s ,%s-----------start\n",str1,str);
-	Url *b = parseURL(str1);
-	//fprintf(stderr, "come from eq---6----%s ,%s-----------start\n",str1,str);
-	//fprintf(stderr, "come from eq---%s--%s-%s-%s ,%s-----------start\n",a->scheme,a->host,a->path,a->port,a->params);
+	printf("url a is %s", a);
+	Url *b =  parseURL(str1);
+	printf("url b is %s", b);
+
 	int isEqual = isUrlEqual(a, b);
-	//fprintf(stderr, "come from eq---7----%s ,%s-----------start\n",str1,str);
-	PG_RETURN_BOOL(isEqual);
-}
 
-Datum url_abs_neq(PG_FUNCTION_ARGS) {
-
-	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-
-	char *str = text_to_cstring((text *) x);
-
-	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
-	char *str1 = text_to_cstring((text *) x1);
-
-	Url *a = parseURL(str);
-	//fprintf(stderr, "come from eq---5---%s ,%s-----------start\n",str1,str);
-	Url *b = parseURL(str1);
-	//fprintf(stderr, "come from eq---6----%s ,%s-----------start\n",str1,str);
-	//fprintf(stderr, "come from eq---%s--%s-%s-%s ,%s-----------start\n",a->scheme,a->host,a->path,a->port,a->params);
-	int isEqual = isUrlEqual(a, b);
-	if (isEqual==0)
-		isEqual=1;
-	else isEqual=0;
-	//fprintf(stderr, "come from eq---7----%s ,%s-----------start\n",str1,str);
 	PG_RETURN_BOOL(isEqual);
 }
 
 PG_FUNCTION_INFO_V1(url_abs_ge);
 
 Datum url_abs_ge(PG_FUNCTION_ARGS) {
-
-	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-
-	char *str = text_to_cstring((text *) x);
-
-	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
-	char *str1 = text_to_cstring((text *) x1);
-
-	Url *a = parseURL(str);
-//	fprintf(stderr, "come from geeeee---5---%s ,%s-----------start\n",str1,str);
-	Url *b = parseURL(str1);
-
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 	int isEqual = isUrlEqual(a, b);
 	int isGreatThan = isGreatthan(a, b);
 	int isEquOrGreat = 0;
@@ -588,114 +534,68 @@ Datum url_abs_ge(PG_FUNCTION_ARGS) {
 PG_FUNCTION_INFO_V1(url_abs_gt);
 
 Datum url_abs_gt(PG_FUNCTION_ARGS) {
-	fprintf(stderr, "come from gt---1111111-------------start\n");
-	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-
-	char *str = text_to_cstring((text *) x);
-
-	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
-	char *str1 = text_to_cstring((text *) x1);
-	fprintf(stderr, "come from gt---%s-----%s-------start\n", str, str1);
-	Url *a = parseURL(str);
-
-	Url *b = parseURL(str1);
-	fprintf(stderr, "come from gt---111-------------start\n");
+	Url *a = (Url *) PG_GETARG_POINTER(0);
+	Url *b = (Url *) PG_GETARG_POINTER(1);
 	int isEqual = isUrlEqual(a, b);
-	fprintf(stderr, "come from gt---222-------------start\n");
 	int isgreatThan = !isEqual;
 	if (!isEqual) {
 		isgreatThan = isGreatthan(a, b);
 
 	}
 	//none zero return true
-	fprintf(stderr, "come from gt---------%d-------start\n", isgreatThan);
 	PG_RETURN_BOOL(isgreatThan);
 
 }
 
-PG_FUNCTION_INFO_V1(url_abs_sameweb);
 
-Datum url_abs_sameweb(PG_FUNCTION_ARGS) {
-	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
 
-	char *str = text_to_cstring((text *) x);
-
-	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
-	char *str1 = text_to_cstring((text *) x1);
-	Url *a = parseURL(str);
-
-	Url *b = parseURL(str1);
-	int isSameweb = isSameWeb(a, b);
-	//none zero return true
-	//fprintf(stderr, "come from gt---------%d-------start\n",isgreatThan);
-	PG_RETURN_BOOL(isSameweb);
-
-}
-
-PG_FUNCTION_INFO_V1(url_abs_notsameweb);
-
-Datum url_abs_notsameweb(PG_FUNCTION_ARGS) {
-	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-
-	char *str = text_to_cstring((text *) x);
-
-	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
-	char *str1 = text_to_cstring((text *) x1);
-	Url *a = parseURL(str);
-
-	Url *b = parseURL(str1);
-	int isnotsameweb = !isSameWeb(a, b);
-	//none zero return true
-	//fprintf(stderr, "come from gt---------%d-------start\n",isgreatThan);
-	PG_RETURN_BOOL(isnotsameweb);
-
-}
-
-int isSameWeb(Url *a, Url *b) {
-	int same = 0;
-
-	char * aa = palloc(strlen(a->host) + strlen(a->port) + 2);
-	char * bb = palloc(strlen(b->host) + strlen(b->port) + 2);
-	strcpy(aa, a->host);
-	strcpy(bb, b->host);
-
-	strcat(aa, a->port);
-	strcat(bb, b->port);
-	strcat(aa, ":/");
-	strcat(bb, ":/");
-	int i = 0;
-	for (i = strlen(aa) - 1; i >= 0; i--) {
-		if (aa[i] != '/')
-			continue;
-		else {
-			aa[i] = '\0';
-			break;
-		}
-	}
-	for (i = strlen(bb) - 1; i >= 0; i--) {
-		if (bb[i] != '/')
-			continue;
-		else {
-			bb[i] = '\0';
-			break;
-		}
-	}
-	//if aa is less than bb, then aa.lengh < bb.lenth
-	if (strcmp(aa, bb) == 0)
-		same = 1;
-	else
-		same = 0;
-	return same;
-}
-
-PG_FUNCTION_INFO_V1(isGreatthan);
-
-int isGreatthan(Url *a, Url *b) {
+static int isGreatthan(Url *a, Url *b) {
 	int isGreatThan = 0;
-	char * aa = malloc(strlen(a->host) + strlen(a->path) + 2);
-	char * bb = malloc(strlen(b->host) + strlen(b->path) + 2);
+	char * aa = malloc(strlen(a->host) + strlen(a->path) + 1);
+	char * bb = malloc(strlen(b->host) + strlen(b->path) + 1);
 	strcpy(aa, a->host);
 	strcpy(bb, b->host);
+	int isLessthan(Url *a, Url *b) {
+		int isLessThan = 0;
+		char * aa = malloc(strlen(a->host) + strlen(a->path) + 1);
+		char * bb = malloc(strlen(b->host) + strlen(b->path) + 1);
+		strcpy(aa, a->host);
+		strcpy(bb, b->host);
+		strcat(aa, "/");
+		strcat(bb, "/");
+		strcat(aa, a->path);
+		strcat(bb, b->path);
+		int i = 0;
+		for (i = strlen(aa) - 1; i >= 0; i--) {
+			if (aa[i] != '/')
+				continue;
+			else {
+				aa[i] = '\0';
+				break;
+			}
+		}
+		for (i = strlen(bb) - 1; i >= 0; i--) {
+			if (bb[i] != '/')
+				continue;
+			else {
+				bb[i] = '\0';
+				break;
+			}
+		}
+		//if aa is less than bb, then aa.lengh < bb.lenth
+		if (strlen(aa) <= strlen(bb))
+			isLessThan = 0;
+		else {
+			//			strstr() Return Value
+			//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
+			if (strstr(aa, bb) == NULL
+				)
+				isLessThan = 0;
+			else
+				isLessThan = 1;
+		}
+		return isLessThan;
+	}
 	strcat(aa, "/");
 	strcat(bb, "/");
 	strcat(aa, a->path);
@@ -723,31 +623,13 @@ int isGreatthan(Url *a, Url *b) {
 	else {
 		//			strstr() Return Value
 		//			A pointer to the first occurrence in str1 of any of the entire sequence of characters specified in str2, or a null pointer if the sequence is not present in str1.
-		if (strstr(bb, aa) == NULL
-		)
-			isGreatThan = 0;
-		else
+		if (strstr(aa, bb) == NULL
+			)
 			isGreatThan = 1;
+		else
+			isGreatThan = 0;
 	}
 	return isGreatThan;
-}
-
-PG_FUNCTION_INFO_V1(url_hash);
-
-Datum
-url_hash(PG_FUNCTION_ARGS)
-{
-
-	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
-
-		char *str = text_to_cstring((text *) x);
-
-
-
-
-
-    PG_RETURN_INT32(hashint4(str));
-
 }
 
 //PG_FUNCTION_INFO_V1(url_abs_cmp);

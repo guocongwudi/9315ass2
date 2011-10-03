@@ -168,31 +168,26 @@ CREATE FUNCTION complex_abs_gt(complex, complex) RETURNS bool
 
 CREATE OPERATOR < (
    leftarg = complex, rightarg = complex, procedure = complex_abs_lt,
-   commutator = > , negator = >= ,
-   restrict = scalarltsel, join = scalarltjoinsel
+   commutator = > , negator = >= 
 );
 CREATE OPERATOR <= (
-   leftarg = complex, rightarg = complex, procedure = complex_abs_le,
-   commutator = >= , negator = > ,
-   restrict = scalarltsel, join = scalarltjoinsel
+   leftarg = complex, rightarg = complex, procedure = complex_abs_le
 );
 CREATE OPERATOR = (
    leftarg = complex, rightarg = complex, procedure = complex_abs_eq,
-   commutator = = ,
+   commutator = = 
    -- leave out negator since we didn't create <> operator
    -- negator = <> ,
-   restrict = eqsel, join = eqjoinsel
+  
 );
 CREATE OPERATOR >= (
    leftarg = complex, rightarg = complex, procedure = complex_abs_ge,
-   commutator = <= , negator = < ,
-   restrict = scalargtsel, join = scalargtjoinsel
+   commutator = <= , negator = < 
+   
 );
 CREATE OPERATOR > (
    leftarg = complex, rightarg = complex, procedure = complex_abs_gt,
-   commutator = < , negator = <= ,
-   restrict = scalargtsel, join = scalargtjoinsel
-);
+  );
 
 -- create the support function too
 CREATE FUNCTION complex_abs_cmp(complex, complex) RETURNS int4

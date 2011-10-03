@@ -128,6 +128,12 @@ CREATE FUNCTION url_abs_ge(url, url) RETURNS bool
    AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION url_abs_gt(url, url) RETURNS bool
    AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION url_abs_notsameweb(url, url) RETURNS bool
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION url_abs_sameweb(url, url) RETURNS bool
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION url_abs_neq(url, url) RETURNS bool
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
 
 CREATE OPERATOR < (
    leftarg = url, rightarg = url, procedure = url_abs_lt,
@@ -140,8 +146,8 @@ CREATE OPERATOR <= (
    restrict = scalarltsel, join = scalarltjoinsel
 );
 CREATE OPERATOR = (
-   leftarg = url, rightarg = url, procedure = url_abs_eq,
-   commutator = = 
+   leftarg = url, rightarg = url, procedure = url_abs_eq,HASHES,
+   commutator = = ,hashes
    -- leave out negator since we didn't create <> operator
    -- negator = <> ,
  --  restrict = eqsel, join = eqjoinsel
@@ -152,9 +158,24 @@ CREATE OPERATOR >= (
    restrict = scalargtsel, join = scalargtjoinsel
 );
 CREATE OPERATOR > (
-   leftarg = url, rightarg = url, procedure = url_abs_gt,
-   commutator = < , --negator = <= ,
-   restrict = scalargtsel, join = scalargtjoinsel
+   leftarg = url, rightarg = url, procedure = url_abs_gt
+
+);
+CREATE OPERATOR <> (
+   leftarg = url, rightarg = url, procedure = url_abs_neq
+  
+   
+);
+
+CREATE OPERATOR ~ (
+   leftarg = url, rightarg = url, procedure = url_abs_sameweb
+  
+   
+);
+CREATE OPERATOR !~ (
+   leftarg = url, rightarg = url, procedure = url_abs_notsameweb
+  
+   
 );
 
 -- create the support function too
@@ -169,16 +190,15 @@ CREATE OPERATOR > (
 
 
 -- now we can make the operator class
-CREATE OPERATOR CLASS url_abs_ops
-    DEFAULT FOR TYPE url USING btree AS
-        OPERATOR        1       < ,
-        OPERATOR        2       <= ,
-        OPERATOR        3       = ,
-        OPERATOR        4       >= ,
-        OPERATOR        5       > ;
-  --      FUNCTION        1       isLessthan(url, url) ,
-    --    FUNCTION        2       isUrlEqual(url, url) ,
-      --  FUNCTION        3       isGreatthan(url, url) ;
+
+CREATE FUNCTION url_hash(url) RETURNS int4
+   AS '_OBJWD_/url' LANGUAGE C IMMUTABLE STRICT;
+   
+CREATE OPERATOR CLASS url_hash_class
+	DEFAULT FOR TYPE url USING hash AS
+        OPERATOR        1       = ,
+        FUNCTION        1       url_hash(url);
+
 
 
 -- now, we can define a btree index on complex types. First, let's populate
@@ -189,13 +209,9 @@ INSERT INTO test_url VALUES ('http://www.baidu.com/aaa/aa?a=a');
 INSERT INTO test_url VALUES ('http://www.baidu.com/bbb');
 INSERT INTO test_url VALUES ('http://www.baidu.com/b/aa?a=a');
 
-SELECT * from test_url where a = 'http://www.baidu.com/aaa';
---SELECT * from test_url where a < 'http://www.baidu.com/aaa/aa?a=a';
---SELECT * from test_url where a > 'http://www.baidu.com/aaa/aa?a=a';
-
-
---CREATE INDEX test_url_ind ON test_url
-  -- USING btree(a url_abs_ops);
+	SELECT * from test_url where a = 'http://www.baidu.com/aaa';
+SELECT * from test_url where a < 'http://www.baidu.com/aaa/aa?a=a';
+SELECT * from test_url where a > 'http://www.baidu.com/aaa/aa?a=a';
 
 
 
