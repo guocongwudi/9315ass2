@@ -153,7 +153,7 @@ Url *parseURL(char *url) {
 				d++;
 			}
 			purl->path = str_n_dup(c, d - c);
-			char *tmp = palloc(strlen(purl->path)+100);
+			char *tmp = palloc(strlen(purl->path)+10);
 			int douslash = 0;
 			int index = 0;
 			for (i = 0; i < strlen(purl->path); i++) {
@@ -176,16 +176,17 @@ Url *parseURL(char *url) {
 //	********************merge**********************//
 	//	default path
 	if (purl->path == NULL) {
-		purl->path = palloc(110);
+		purl->path = palloc(11);
 		strcpy(purl->path, "index.html");
 		purl->path[10] = '\0';
 	} else {
 		int path_len = strlen(purl->path);
 		char * p = purl->path;
-		while (*p != '\0' && *p != '?')
+		while (*p != '\0')
 			p++;
-		if (*(p - 1) == '/') {
 
+		if (*(p - 1) == '/') {
+			p=palloc(11);
 			strcat(purl->path, "index.html");
 		}
 
@@ -195,7 +196,12 @@ Url *parseURL(char *url) {
 
 	// copy params, if any
 	if (*d != '\0') {
-		c = d = d + 1; // skip over '?'
+
+		while(*c=='?')
+		{
+			c++;d++;//skip more ?
+		}
+
 		if (*d != '\0') {
 			purl->params = strdup(c);
 		}
@@ -306,7 +312,7 @@ Datum url_in(PG_FUNCTION_ARGS) {
 			len += strlen(url->params);
 		}
 
-		result = malloc(len + 6);
+		result = malloc(len + 7);
 
 		strcpy(result, url->scheme);
 		strcat(result, "://");
@@ -536,7 +542,7 @@ Datum url_abs_eq(PG_FUNCTION_ARGS) {
 	//fprintf(stderr, "come from eq---7----%s ,%s-----------start\n",str1,str);
 	PG_RETURN_BOOL(isEqual);
 }
-
+PG_FUNCTION_INFO_V1(url_abs_neq);
 Datum url_abs_neq(PG_FUNCTION_ARGS) {
 
 	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
