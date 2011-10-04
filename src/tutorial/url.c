@@ -22,7 +22,6 @@ typedef struct parsed_url {
 
 char *str_n_dup(char *, int);
 Url *parseURL(char *);
-void printParsedURL(Url *);
 Url *makeParsedURL();
 Url *freeParsedURL(Url *);
 int isLessthan(Url *, Url *);
@@ -330,8 +329,8 @@ Datum url_in(PG_FUNCTION_ARGS) {
 
 	vardata = (text *) cstring_to_text(result);
 
-	//char * tmp = text_to_cstring((text *) vardata);
-//	fprintf(stderr, "the result: -----%s\n", tmp);
+	//free
+	freeParsedURL(url);
 
 	PG_RETURN_POINTER(vardata);
 
@@ -344,7 +343,6 @@ Datum url_out(PG_FUNCTION_ARGS) {
 	text * x = (text *) PG_GETARG_POINTER(0);
 
 	char *str = text_to_cstring((text *) x);
-	fprintf(stderr, "the result: @@-----%s\n", str);
 	PG_RETURN_CSTRING(str);
 }
 
@@ -357,7 +355,7 @@ Datum url_out(PG_FUNCTION_ARGS) {
 PG_FUNCTION_INFO_V1(url_recv);
 
 Datum url_recv(PG_FUNCTION_ARGS) {
-	fprintf(stderr, "come from rec------------------start\n");
+//	fprintf(stderr, "come from rec------------------start\n");
 	StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
 	char *str;
 	text * result;
@@ -425,6 +423,8 @@ Datum url_abs_lt(PG_FUNCTION_ARGS) {
 	if (!isEqual) {
 		isLessThan = isLessthan(a, b);
 	}
+	freeParsedURL(a);
+	freeParsedURL(b);
 	//none zero return true
 	PG_RETURN_BOOL(isLessThan);
 }
@@ -470,6 +470,8 @@ int isLessthan(Url *a, Url *b) {
 		else
 			isLessThan = 1;
 	}
+	free(aa);
+	free(bb);
 	return isLessThan;
 }
 PG_FUNCTION_INFO_V1(url_abs_le);
@@ -494,6 +496,9 @@ Datum url_abs_le(PG_FUNCTION_ARGS) {
 		isEquOrLess = 1;
 	else
 		isEquOrLess = 0;
+
+	freeParsedURL(a);
+	freeParsedURL(b);
 
 	PG_RETURN_BOOL(isEquOrLess);
 }
@@ -540,6 +545,9 @@ Datum url_abs_eq(PG_FUNCTION_ARGS) {
 	//fprintf(stderr, "come from eq---%s--%s-%s-%s ,%s-----------start\n",a->scheme,a->host,a->path,a->port,a->params);
 	int isEqual = isUrlEqual(a, b);
 	//fprintf(stderr, "come from eq---7----%s ,%s-----------start\n",str1,str);
+
+	freeParsedURL(a);
+	freeParsedURL(b);
 	PG_RETURN_BOOL(isEqual);
 }
 PG_FUNCTION_INFO_V1(url_abs_neq);
@@ -562,6 +570,9 @@ Datum url_abs_neq(PG_FUNCTION_ARGS) {
 		isEqual=1;
 	else isEqual=0;
 	//fprintf(stderr, "come from eq---7----%s ,%s-----------start\n",str1,str);
+
+	freeParsedURL(a);
+	freeParsedURL(b);
 	PG_RETURN_BOOL(isEqual);
 }
 
@@ -588,33 +599,34 @@ Datum url_abs_ge(PG_FUNCTION_ARGS) {
 	else
 		isEquOrGreat = 0;
 
+	freeParsedURL(a);
+	freeParsedURL(b);
+
 	PG_RETURN_BOOL(isEquOrGreat);
 }
 
 PG_FUNCTION_INFO_V1(url_abs_gt);
 
 Datum url_abs_gt(PG_FUNCTION_ARGS) {
-	fprintf(stderr, "come from gt---1111111-------------start\n");
 	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
 
 	char *str = text_to_cstring((text *) x);
 
 	text * x1 = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(1));
 	char *str1 = text_to_cstring((text *) x1);
-	fprintf(stderr, "come from gt---%s-----%s-------start\n", str, str1);
 	Url *a = parseURL(str);
 
 	Url *b = parseURL(str1);
-	fprintf(stderr, "come from gt---111-------------start\n");
 	int isEqual = isUrlEqual(a, b);
-	fprintf(stderr, "come from gt---222-------------start\n");
 	int isgreatThan = !isEqual;
 	if (!isEqual) {
 		isgreatThan = isGreatthan(a, b);
 
 	}
 	//none zero return true
-	fprintf(stderr, "come from gt---------%d-------start\n", isgreatThan);
+
+	freeParsedURL(a);
+	freeParsedURL(b);
 	PG_RETURN_BOOL(isgreatThan);
 
 }
@@ -634,6 +646,8 @@ Datum url_abs_sameweb(PG_FUNCTION_ARGS) {
 	int isSameweb = isSameWeb(a, b);
 	//none zero return true
 	//fprintf(stderr, "come from gt---------%d-------start\n",isgreatThan);
+	freeParsedURL(a);
+	freeParsedURL(b);
 	PG_RETURN_BOOL(isSameweb);
 
 }
@@ -653,6 +667,8 @@ Datum url_abs_notsameweb(PG_FUNCTION_ARGS) {
 	int isnotsameweb = !isSameWeb(a, b);
 	//none zero return true
 	//fprintf(stderr, "come from gt---------%d-------start\n",isgreatThan);
+	freeParsedURL(a);
+	freeParsedURL(b);
 	PG_RETURN_BOOL(isnotsameweb);
 
 }
@@ -691,6 +707,8 @@ int isSameWeb(Url *a, Url *b) {
 		same = 1;
 	else
 		same = 0;
+	free(aa);
+	free(bb);
 	return same;
 }
 
@@ -735,6 +753,8 @@ int isGreatthan(Url *a, Url *b) {
 		else
 			isGreatThan = 1;
 	}
+	free(aa);
+	free(bb);
 	return isGreatThan;
 }
 
