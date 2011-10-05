@@ -252,20 +252,20 @@ Url *freeParsedURL(Url *purl) {
 		return NULL;
 	if (purl->scheme != NULL
 	)
-		free(purl->scheme);
+		pfree(purl->scheme);
 	if (purl->host != NULL
 	)
-		free(purl->host);
+		pfree(purl->host);
 	if (purl->port != NULL
 	)
-		free(purl->port);
+		pfree(purl->port);
 	if (purl->path != NULL
 	)
-		free(purl->path);
+		pfree(purl->path);
 	if (purl->params != NULL
 	)
-		free(purl->params);
-	free(purl);
+		pfree(purl->params);
+	pfree(purl);
 	return NULL;
 }
 
@@ -311,7 +311,7 @@ Datum url_in(PG_FUNCTION_ARGS) {
 			len += strlen(url->params);
 		}
 
-		result = malloc(len + 7);
+		result = palloc(len + 7);
 
 		strcpy(result, url->scheme);
 		strcat(result, "://");
@@ -330,7 +330,7 @@ Datum url_in(PG_FUNCTION_ARGS) {
 	vardata = (text *) cstring_to_text(result);
 
 	//free
-	freeParsedURL(url);
+	//freeParsedURL(url);
 
 	PG_RETURN_POINTER(vardata);
 
@@ -423,8 +423,8 @@ Datum url_abs_lt(PG_FUNCTION_ARGS) {
 	if (!isEqual) {
 		isLessThan = isLessthan(a, b);
 	}
-	freeParsedURL(a);
-	freeParsedURL(b);
+//	freeParsedURL(a);
+//	freeParsedURL(b);
 	//none zero return true
 	PG_RETURN_BOOL(isLessThan);
 }
@@ -470,8 +470,8 @@ int isLessthan(Url *a, Url *b) {
 		else
 			isLessThan = 1;
 	}
-	free(aa);
-	free(bb);
+	pfree(aa);
+	pfree(bb);
 	return isLessThan;
 }
 PG_FUNCTION_INFO_V1(url_abs_le);
@@ -497,8 +497,8 @@ Datum url_abs_le(PG_FUNCTION_ARGS) {
 	else
 		isEquOrLess = 0;
 
-	freeParsedURL(a);
-	freeParsedURL(b);
+//	freeParsedURL(a);
+//	freeParsedURL(b);
 
 	PG_RETURN_BOOL(isEquOrLess);
 }
@@ -546,8 +546,8 @@ Datum url_abs_eq(PG_FUNCTION_ARGS) {
 	int isEqual = isUrlEqual(a, b);
 	//fprintf(stderr, "come from eq---7----%s ,%s-----------start\n",str1,str);
 
-	freeParsedURL(a);
-	freeParsedURL(b);
+//	freeParsedURL(a);
+//	freeParsedURL(b);
 	PG_RETURN_BOOL(isEqual);
 }
 PG_FUNCTION_INFO_V1(url_abs_neq);
@@ -571,8 +571,8 @@ Datum url_abs_neq(PG_FUNCTION_ARGS) {
 	else isEqual=0;
 	//fprintf(stderr, "come from eq---7----%s ,%s-----------start\n",str1,str);
 
-	freeParsedURL(a);
-	freeParsedURL(b);
+//	freeParsedURL(a);
+//	freeParsedURL(b);
 	PG_RETURN_BOOL(isEqual);
 }
 
@@ -599,8 +599,8 @@ Datum url_abs_ge(PG_FUNCTION_ARGS) {
 	else
 		isEquOrGreat = 0;
 
-	freeParsedURL(a);
-	freeParsedURL(b);
+//	freeParsedURL(a);
+//	freeParsedURL(b);
 
 	PG_RETURN_BOOL(isEquOrGreat);
 }
@@ -625,8 +625,8 @@ Datum url_abs_gt(PG_FUNCTION_ARGS) {
 	}
 	//none zero return true
 
-	freeParsedURL(a);
-	freeParsedURL(b);
+//	freeParsedURL(a);
+//	freeParsedURL(b);
 	PG_RETURN_BOOL(isgreatThan);
 
 }
@@ -646,8 +646,8 @@ Datum url_abs_sameweb(PG_FUNCTION_ARGS) {
 	int isSameweb = isSameWeb(a, b);
 	//none zero return true
 	//fprintf(stderr, "come from gt---------%d-------start\n",isgreatThan);
-	freeParsedURL(a);
-	freeParsedURL(b);
+//	freeParsedURL(a);
+//	freeParsedURL(b);
 	PG_RETURN_BOOL(isSameweb);
 
 }
@@ -667,8 +667,8 @@ Datum url_abs_notsameweb(PG_FUNCTION_ARGS) {
 	int isnotsameweb = !isSameWeb(a, b);
 	//none zero return true
 	//fprintf(stderr, "come from gt---------%d-------start\n",isgreatThan);
-	freeParsedURL(a);
-	freeParsedURL(b);
+//	freeParsedURL(a);
+//	freeParsedURL(b);
 	PG_RETURN_BOOL(isnotsameweb);
 
 }
@@ -707,8 +707,8 @@ int isSameWeb(Url *a, Url *b) {
 		same = 1;
 	else
 		same = 0;
-	free(aa);
-	free(bb);
+	pfree(aa);
+	pfree(bb);
 	return same;
 }
 
@@ -716,8 +716,8 @@ PG_FUNCTION_INFO_V1(isGreatthan);
 
 int isGreatthan(Url *a, Url *b) {
 	int isGreatThan = 0;
-	char * aa = malloc(strlen(a->host) + strlen(a->path) + 2);
-	char * bb = malloc(strlen(b->host) + strlen(b->path) + 2);
+	char * aa = palloc(strlen(a->host) + strlen(a->path) + 2);
+	char * bb = palloc(strlen(b->host) + strlen(b->path) + 2);
 	strcpy(aa, a->host);
 	strcpy(bb, b->host);
 	strcat(aa, "/");
@@ -753,8 +753,8 @@ int isGreatthan(Url *a, Url *b) {
 		else
 			isGreatThan = 1;
 	}
-	free(aa);
-	free(bb);
+	pfree(aa);
+	pfree(bb);
 	return isGreatThan;
 }
 
