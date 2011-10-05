@@ -1,6 +1,7 @@
 
 DROP TABLE test_url;
 DROP TYPE  url CASCADE;
+DROP TABLE  IF EXISTS AccessLog   CASCADE ;
 ---------------------------------------------------------------------------
 --
 -- complex.sql-
@@ -208,12 +209,45 @@ INSERT INTO test_url VALUES ('http://www.baidu.com/aaa');
 INSERT INTO test_url VALUES ('http://www.baidu.com/aaa/aa?a=a');
 INSERT INTO test_url VALUES ('http://www.baidu.com/bbb');
 INSERT INTO test_url VALUES ('http://www.baidu.com/b/aa?a=a');
+INSERT INTO test_url VALUES ('http://www.cse.unsw.edu.au/');
+INSERT INTO test_url VALUES ('http://www.cse.unsw.edu.au/asdfsadf/sdf/fsd.jsp');
+INSERT INTO test_url VALUES ('http://www.cse.unsw.edu.au:9090/atmsdf/asdf/sdf?gwer=asdf');
+
 
 	SELECT * from test_url where a = 'http://www.baidu.com/aaa';
 SELECT * from test_url where a < 'http://www.baidu.com/aaa/aa?a=a';
 SELECT * from test_url where a > 'http://www.baidu.com/aaa/aa?a=a';
 
+create table AccessLog (
+   id        serial primary key,
+   path      url,
+   accessed  timestamp
+);
+insert into AccessLog(path,accessed) values
+('http://www.CsE.unsw.edu.au/aa/aaa/','2011-09-11 09:30'),
+('http://www.CsE.unsw.edu.au/aa/aaa/','2011-09-11 09:32'),
+('http://www.cse.unsw.edu.au/aa/aaa/index.html','2011-09-11 09:31'),
+('http://www.cse.unsw.edu.au/staff/index.php','2011-09-11 09:32'),
+('http://www.unsw.edu.au/','2011-09-11 09:33'),
+('http://blah.unsw.edu.au/magpie/monitor.php?s=4e71745ea7174', '2011-09-11 09:33'),
+('http://www.unsw.edu.au/index.html','2011-09-11 09:34'),
+('http://mahler.cse.unsw.edu.au/webcms2/course/index.php?cid=2196','2011-09-11 09:35'),
+('http://mahler.cse.unsw.edu.au/webcms2/works/index.php?cid=2196&inc=LN','2011-09-11 09:35'),
+('https://my.unsw.edu.au/portal/dt?','2011-09-11 09:35'),
+('http://blah.com/xx/get.php?id=55','2011-09-11 09:36'),
+('https://my.cse.unsw.edu.au/index.php','2011-09-11 09:37');
 
+create index on AccessLog using hash(path);
+
+
+--select * from AccessLog;
+select a.path, b.path	
+from   AccessLog a, AccessLog b
+where  a.path = b.path and a.accessed < b.accessed;
+
+select path,count(*)
+from   AccessLog
+group  by path;
 
 -- clean up the example
 --DROP TABLE test_url;
