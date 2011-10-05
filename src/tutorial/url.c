@@ -536,7 +536,7 @@ Datum url_abs_eq(PG_FUNCTION_ARGS) {
 	//fprintf(stderr, "come from eq---7----%s ,%s-----------start\n",str1,str);
 	PG_RETURN_BOOL(isEqual);
 }
-
+PG_FUNCTION_INFO_V1(url_abs_neq);
 Datum url_abs_neq(PG_FUNCTION_ARGS) {
 
 	text * x = (text *) PG_DETOAST_DATUM(PG_GETARG_DATUM(0));
